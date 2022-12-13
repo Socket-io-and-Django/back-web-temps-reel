@@ -4,14 +4,24 @@
     "description": "",
     "main": "index.js",
     "scripts": {
-      "test": "echo \"Error: no test specified\" && exit 1"
+        "dev": "nodemon server"
     },
     "author": "",
     "license": "ISC",
     "dependencies": {
-      "express": "^4.18.2",
-      "nodemon": "^2.0.20",
-      "socket.io": "^4.5.4"
+        "bcrypt": "^5.1.0",
+        "cookie-parser": "^1.4.6",
+        "cors": "^2.8.5",
+        "dotenv": "^16.0.3",
+        "express": "^4.18.2",
+        "jsonwebtoken": "^8.5.1",
+        "moment": "^2.29.4",
+        "mongodb": "^4.12.1",
+        "mongoose": "^6.8.0",
+        "socket.io": "^4.5.4",
+        "socket.io-client": "^4.5.4"
+    },
+    "devDependencies": {
+        "nodemon": "^2.0.20"
     }
-  }
-  
+}

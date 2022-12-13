@@ -1,0 +1,32 @@
+version: "3"
+
+services:
+  node:
+    depends_on:
+      - mongodb
+    build: .
+    user: node
+    working_dir: /home/node
+    tty: true
+    stdin_open: true
+    command: node
+    ports:
+      - 3000:3000
+      - 9001:9001
+    volumes:
+      - .:/home/node
+
+  mongodb:
+    image: mongo:latest
+    restart: unless-stopped
+    env_file: ./db/.env
+#    environment:
+#      - MONGO_INITRD_ROOT_USERNAME=$DB_USER
+#      - MONGO_INITRD_ROOT_PASSWORD=$DB_PASSWORD
+    ports:
+      - 27017:27017
+    volumes:
+      - mongodb:/data/db
+
+volumes:
+  mongodb:
