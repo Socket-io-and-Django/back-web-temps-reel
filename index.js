@@ -146,29 +146,13 @@ io.on("connection", (socket) => {
         new Date().getFullYear()
     );
     if (yearDiff > 1) {
-      // TODO  choix date de rdv avec calendrier
-      // const today = new Date("2022-12-16");
-      // let today = new Date();
-      // const currentDay = today.getDay();
-      // for (let day = today.getDay(); day < 6; day++) {
-      //   if (
-      //     !maintenanceAppointments.some(
-      //       (e) =>
-      //         e.date.getDate() === addDays(today, day - currentDay).getDate()
-      //     )
-      //   ) {
-      //     if (day > 0 && day < 6) {
-      //       availableMaintenanceDates.push(addDays(today, day - currentDay));
-      //     }
-      //   }
-      // }
       calcAvailableMaintenanceDates();
       if (availableMaintenanceDates.length) {
         sendMessage(socket, "ask_appointment_date", {
           from: "server",
           txt: availableMaintenanceDates,
+          vehiculeInfo,
         });
-        console.log(availableMaintenanceDates);
       }
     } else {
       sendMessage(socket, "ask_km_since_last_maintenance", {
@@ -179,33 +163,19 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("send_appointment_date", (res) => {
-    console.log("before push");
-    console.log("res : " + res);
-    console.log(availableMaintenanceDates);
-    console.log(maintenanceAppointments);
-    console.log(availableMaintenanceDates.find((e) => e.id === res));
+  socket.on("send_maintenance_appointment_date", (res) => {
     if (availableMaintenanceDates.some((e) => e.id === res)) {
       maintenanceAppointments.push({
         id: nextMaintenanceId,
-        date: availableMaintenanceDates.find((e) => e.id === res),
+        date: availableMaintenanceDates.find((e) => e.id === res).date,
       });
       nextMaintenanceId += 1;
-      console.log("after push");
-      console.log(availableMaintenanceDates);
-      console.log(maintenanceAppointments);
+      socket.emit("maintenance_appointment_added", {
+        from: "server",
+        txt: "Votre rendez-vous a été sauvegardé !",
+      });
+      socket.broadcast.emit("maintenance_appointment_added_by_other_user");
     }
-    //   sendMessage(socket, "appointment_already_taken", {
-    //     from: "server",
-    //     txt: "Le rendez-vous n'est plus disponible, veillez choisir une autre date",
-    //   });
-    // } else {
-    // }
-    // if (res === 1) {
-    //   // TODO demande rdv
-    // } else {
-    //   socket.emit("reset_chat");
-    // }
   });
 
   socket.on("send_km_since_maintenance_date", (res) => {
