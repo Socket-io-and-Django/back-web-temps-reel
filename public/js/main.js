@@ -4,24 +4,29 @@ const chatForm = document.getElementById('chat-form')
 
 const queryString = window.location.search;
 const urlParam = new URLSearchParams(queryString)
-const userName = urlParam.get('username')
+const userName = urlParam.get('username');
 const room = urlParam.get('room')
+// const username = document.getElementById('user-name').value;
+// const password = document.getElementById('password').value;
+
 const roomName = document.getElementById('room-name');
 const usersList = document.getElementById('users');
 // console.log(userName, room);
+const token = ""
 
 
-const socket = io();
-io.connect()
+
+
+
 
 // join chat room
 socket.emit('joinRoom', {userName, room})
 const chatMessages = document.querySelector('.chat-messages');
 
 // get room and users info
-socket.on('roomUsers', ({room, users}) => {
+socket.on('roomUsers', ({room, user}) => {
     outputRoom(room);
-    outputUsers(users);
+    outputUsers(user);
 });
 
 // message from server

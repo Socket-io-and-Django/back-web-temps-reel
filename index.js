@@ -1,56 +1,37 @@
 const express = require('express');
 const app = express();
 const http = require('http');
-const cors = require('cors');
-const {Server: Index} = require('socket.io');
+const server = http.createServer(app);
+const { Server } = require('socket.io');
 
-const path = require('path');
-const formatMessage = require('./utils/messages')
-const {userJoin, getCurrentUser, userLeave, getRoomUsers} = require('./utils/users');
-const jwtHandler = require('./middleware/jwsHandler')
+
 const coolieParser = require('cookie-parser');
+const path = require('path');
+// const formatMessage = require('./utils/messages')
+// const {userJoin, getCurrentUser, userLeave, getRoomUsers} = require('./utils/users');
+const jwtHandler = require('./middleware/jwsHandler');
 
 const auth = require('./routers/auth');
 const refresh = require('./routers/refresh');
 const register = require('./routers/register');
 const logout = require('./routers/logout');
 const mongodb = require('./db/mongo');
-// const {MongoClient} = require("mongodb");
-// const dbConfig = require("./config/db.config");
-// MongoClient.connect("mongodb://mongodb:27017/webTempsReal", function(err, db) {
-//   if (err) throw err;
-//   console.log("Database created!")
-//   db.close();
-// });
-// const db = require('./db/mongo');
-// mongodb.initClientDbConnection()
-// Import the mongoose module
-// const mongoose = require("mongoose");
-// mongoose.Promise = global.Promise;
 
-// Set up default mongoose connection
-
-
-
-const server = http.createServer(app);
 app.use(express.json());
-// app.use(coolieParser);
 
 // set static folder
+app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/register', register);
 app.use('/auth', auth);
 app.use('/refresh', refresh);
 app.use('/logout', logout);
 
-app.use(express.static(path.join(__dirname, 'public')));
-
-// const { Index } = require("socket.io");
-/*
-const io = new Index(server, {
+const io = new Server(server, {
   cors: {
     origin: "http://localhost:5173",
   },
+  cookie: true
 });
 
 let users = [];
@@ -315,7 +296,17 @@ io.on("connection", (socket) => {
     }
   });
 });
-*/
-server.listen(3000, () => {
-  console.log("listening on *:3000");
+
+
+// app.use(jwtHandler);
+
+const PORT = process.env.PORT || 3000;
+app.use(coolieParser);
+
+io.use(jwtHandler)
+io.on("connection", socket => {
+  // console.log("connected")
+})
+server.listen(PORT, () => {
+  console.log(`listening on *:${PORT}`);
 });

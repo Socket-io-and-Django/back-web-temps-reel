@@ -24,6 +24,10 @@
 //     usersList.innerHTML=`${users.map(user => `<li>${user.username}</li>`).join('')}`;
 // }
 
+// import {io} from "socket.io-client";
+// import { parse } from "cookie";
+
+// const COOKIE_NAME = "jwt";
 function handleSubmit(event) {
     event.preventDefault();
     const data = new FormData(event.target);
@@ -31,6 +35,7 @@ function handleSubmit(event) {
         "username": data.get('user-name'),
         "password": data.get('password')
     }
+    // console.log(`user: ${user}`);
 
 
     async function postData(url = '', data = {}) {
@@ -48,9 +53,10 @@ function handleSubmit(event) {
         });
         return response.json(); // parses JSON response into native JavaScript objects
     }
-
     postData('http://localhost:3000/auth', user)
         .then((data) => {
+            // const cookie = document.cookie;
+            // console.log("coockie:", cookie);
             if(data.accessToken) {
                 const accessToken = data.accessToken;
                 console.log(accessToken); // JSON data parsed by `data.json()` call
@@ -60,8 +66,26 @@ function handleSubmit(event) {
                 login.style.display = 'none';
 
             }
-            alert(data.message);
+
+            console.log(`token: ${data.accessToken}`);
+            // console.log(`username: ${user.username}`);
+            const socket = io("http://localhost:3000", {
+                auth: {
+                    token: data.accessToken,
+                    // token: data.accessToken,
+                    // username: user.username
+                },
+                transports: ['websocket', 'polling'],
+                withCredentials: true
+            });
+            socket.on("connect_error", () => {
+                console.log("error");
+            })
+            socket.on("connect", () => {
+                console.log("connected");
+            })
         });
+
 }
 
 
