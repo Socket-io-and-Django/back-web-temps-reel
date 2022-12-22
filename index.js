@@ -3,6 +3,7 @@ const app = express();
 const http = require('http');
 const server = http.createServer(app);
 const { Server } = require('socket.io');
+const cors = require('cors');
 
 
 const coolieParser = require('cookie-parser');
@@ -18,6 +19,11 @@ const logout = require('./routers/logout');
 const mongodb = require('./db/mongo');
 
 app.use(express.json());
+
+app.use(cors({
+  origin: 'http://localhost:8080',
+
+}))
 
 // set static folder
 app.use(express.static(path.join(__dirname, 'public')));
