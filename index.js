@@ -11,6 +11,9 @@ const path = require('path');
 // const formatMessage = require('./utils/messages')
 // const {userJoin, getCurrentUser, userLeave, getRoomUsers} = require('./utils/users');
 const jwtHandler = require('./middleware/jwsHandler');
+const credential = require('./middleware/credentials');
+const corsOptions = require('./config/corsOptions');
+
 
 const auth = require('./routers/auth');
 const refresh = require('./routers/refresh');
@@ -19,11 +22,9 @@ const logout = require('./routers/logout');
 const mongodb = require('./db/mongo');
 
 app.use(express.json());
+app.use(credential);
 
-app.use(cors({
-  origin: 'http://localhost:8080',
-
-}))
+app.use(cors(corsOptions));
 
 // set static folder
 app.use(express.static(path.join(__dirname, 'public')));
