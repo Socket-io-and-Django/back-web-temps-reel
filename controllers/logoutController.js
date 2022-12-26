@@ -15,6 +15,7 @@ const logoutHandler = async (req, res) => {
     isExistUser.refreshToken = '';
     const result = isExistUser.save();
     res.clearCookie('jwt', {httpOnly: true, sameSite: 'None', secure: true}) //to have https
+    // res.
     res.sendStatus(204);
 }
 module.exports = { logoutHandler };

@@ -1,25 +1,6 @@
 const jwt = require('jsonwebtoken');
 const {decode} = require("jsonwebtoken");
 require('dotenv').config();
-const coolieParser = require('cookie-parser');
-
-
-// const jwtVerifier = (req, res, next) => {
-//     const authHeader = req.headers['authorization'];
-//     if(!authHeader) return res.sendStatus(401);
-//     console.log(authHeader);
-//     const token = authHeader.split(' ')[1];
-//     jwt.verify(
-//         token,
-//         process.env.ACCESS_TOKEN_SECRET,
-//         (err, decoded) => {
-//             if (err) return res.sendStatus(403); // forbidden we received un valid token for exist user
-//             req.username = decoded.username;
-//             console.log(`req.username: ${req.username}`)
-//             next();
-//         }
-//     );
-// }
 
 const jwtVerifier = (socket, next) => {
     const token = socket.handshake.auth.token;
@@ -49,8 +30,8 @@ const jwtVerifier = (socket, next) => {
             if (err) {
                 throw new Error("Unauthorized Client");
             } // forbidden we received un valid token for exist user
-            socket.handshake.auth.username = decoded.username;
-            socket.handshake.auth['roles'] = decoded.roles;
+            socket.handshake.auth.username = decoded.userInfo.username;
+            socket.handshake.auth['roles'] = decoded.userInfo.roles;
         }
     );
 

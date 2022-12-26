@@ -10,15 +10,18 @@ const coolieParser = require('cookie-parser');
 const path = require('path');
 // const formatMessage = require('./utils/messages')
 // const {userJoin, getCurrentUser, userLeave, getRoomUsers} = require('./utils/users');
-const jwtHandler = require('./middleware/jwsHandler');
+const jwtHandler = require('./middleware/jwtSocketHandler');
+const jwtRouterHandler = require('./middleware/jwtRoutersHandler');
 const credential = require('./middleware/credentials');
 const corsOptions = require('./config/corsOptions');
-
+const rolesList = require('./config/rolesList');
+const verifyRoles = require('./middleware/verifyRoles');
 
 const auth = require('./routers/auth');
 const refresh = require('./routers/refresh');
 const register = require('./routers/register');
 const logout = require('./routers/logout');
+const modify = require('./routers/modify');
 const mongodb = require('./db/mongo');
 
 app.use(express.json());
@@ -29,11 +32,38 @@ app.use(cors(corsOptions));
 // set static folder
 app.use(express.static(path.join(__dirname, 'public')));
 
+// app.use(coolieParser);
+
 app.use('/register', register);
+
 app.use('/auth', auth);
 app.use('/refresh', refresh);
+app.use('/modify', modify);
+app.use(jwtRouterHandler);
+app.use(verifyRoles(rolesList.Admin, rolesList.User));
 app.use('/logout', logout);
 
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+  console.log(`listening on *:${PORT}`);
+});
+// const io = new Server(9000, { allowRequest: cors(corsOptions)});
+
+const io = new Server(9000, {
+  cors:{
+    origin: 'http://localhost:8080'
+  }
+});
+// io.use(cors(corsOptions));
+io.use(jwtHandler);
+io.on("connection", (socket) => {
+  console.log(socket.handshake.auth);
+  socket.emit("token", socket.handshake.auth);
+})
+// io.use(cors(corsOptions));
+// example of use verifyRole :
+// .get(verifyRole(rolesList.Admin, rolesList.User),
+/*
 const io = new Server(server, {
   cors: {
     origin: "http://localhost:5173",
@@ -89,6 +119,7 @@ const sendMessage = (socket, emitType, value) => {
 
 app.use(express.json());
 // app.use(coolieParser);
+
 
 // set static folder
 
@@ -314,6 +345,4 @@ io.use(jwtHandler)
 io.on("connection", socket => {
   // console.log("connected")
 })
-server.listen(PORT, () => {
-  console.log(`listening on *:${PORT}`);
-});
+*/

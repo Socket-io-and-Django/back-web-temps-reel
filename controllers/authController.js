@@ -10,10 +10,16 @@ const loginHandler = async (req, res) =>  {
     const isExistUser = await User.findOne({username: username}).exec();
     if (!isExistUser) return res.status(401).json({'message': 'Username or password is not correct!'});
     const match = await bcrypt.compare(password, isExistUser.password);
+
     if (match) {
         // here must create JWTs to be used with protected routes
         const accessToken = jwt.sign(
-            {"username": isExistUser.username, "roles": isExistUser.roles},
+            {
+                "userInfo": {
+                    "username": isExistUser.username,
+                    "roles": Object.values(isExistUser.roles)
+                }
+            },
             process.env.ACCESS_TOKEN_SECRET,
             {expiresIn: '1h'}
         );
@@ -23,7 +29,7 @@ const loginHandler = async (req, res) =>  {
             {expiresIn: '1d'}
         );
         isExistUser.refreshToken = refreshToken;
-        const result = await isExistUser.save();
+        const result = await isExistUser.save()
         // the Tokens must be stored in memory in the front
         // be attention to not store it in localstorage or any other cookie accessible by JS
         // that's why we use httpOnly cookie in this way the cookie is not accessible by JS

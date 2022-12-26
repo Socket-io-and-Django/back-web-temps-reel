@@ -17,7 +17,12 @@ const refreshTokenHandler = async (req, res) =>  {
             console.log(err);
             if(err || isExistUser.username !== encoded.username) return res.sendStatus(403);
             const accessToken = jwt.sign(
-                {"username": encoded.username},
+                {
+                    "userInfo": {
+                        "username": encoded.username,
+                        "roles": Object.values(isExistUser.roles)
+                    }
+                },
                 process.env.ACCESS_TOKEN_SECRET,
                 {expiresIn: "1h"}
             );

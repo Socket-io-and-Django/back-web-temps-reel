@@ -6,13 +6,17 @@ const handleNewUser = async (req, res) => {
     if (!username || !password) return res.status(400).json({'message': 'Username and password are required!'});
     // cheque if username are already exist
     const alreadyExist = await User.findOne({username: username}).exec();
-    console.log(alreadyExist);
+    // console.log(alreadyExist);
     if (alreadyExist) return res.status(409).json({'message': 'This username are already exist!'});
     try {
         // encrypting password
         const hashedPassword = await bcrypt.hash(password, 10);
         // store new user
-        const newUser = new User({'username': username, 'password': hashedPassword});
+        const newUser = new User({
+            'username': username,
+            'password': hashedPassword,
+            'role': { "user": 42 }
+        });
         newUser.save().then(() => console.log('saved'));
         return res.status(201).json({'message': `${username} has been created !`});
     } catch (err) {
