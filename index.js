@@ -10,7 +10,7 @@ const coolieParser = require('cookie-parser');
 const path = require('path');
 // const formatMessage = require('./utils/messages')
 // const {userJoin, getCurrentUser, userLeave, getRoomUsers} = require('./utils/users');
-const jwtHandler = require('./middleware/jwtSocketHandler');
+const jwtSocketHandler = require('./middleware/jwtSocketHandler');
 const jwtRouterHandler = require('./middleware/jwtRoutersHandler');
 const credential = require('./middleware/credentials');
 const corsOptions = require('./config/corsOptions');
@@ -57,7 +57,7 @@ const io = new Server(9000, {
   }
 });
 // io.use(cors(corsOptions));
-io.use(jwtHandler);
+io.use(jwtSocketHandler);
 io.on("connection", (socket) => {
   console.log("on connection", socket.handshake.auth);
   socket.emit("token", socket.handshake.auth);
@@ -130,7 +130,7 @@ app.use('/auth', auth);
 app.use('/refresh', refresh);
 app.use('/logout', logout);
 
-// app.use(jwtHandler);
+// app.use(jwtSocketHandler);
 app.use(express.static(path.join(__dirname, 'public')));
 app.get("/", (req, res) => {
   res.sendFile(__dirname + "/index.html");
@@ -338,12 +338,12 @@ io.on("connection", (socket) => {
 });
 
 
-// app.use(jwtHandler);
+// app.use(jwtSocketHandler);
 
 const PORT = process.env.PORT || 3000;
 app.use(coolieParser);
 
-io.use(jwtHandler)
+io.use(jwtSocketHandler)
 io.on("connection", socket => {
   // console.log("connected")
 })

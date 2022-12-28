@@ -2,23 +2,8 @@ const jwt = require('jsonwebtoken');
 const {decode} = require("jsonwebtoken");
 require('dotenv').config();
 
-const jwtVerifier = (socket, next) => {
+const jwtSocketHandler = (socket, next) => {
     const token = socket.handshake.auth.token;
-    // const request = socket.io.engine.transport.pollXhr.xhr;
-    // console.log(`in cookieHeader !: ${request}`);
-    // const cookieHeader = request.getResponseHeader("set-cookie");
-    // const cookief = socket.handshake;
-    // const cookies = coolieParser.parse(socket.handshake.headers.cookie);
-        // .parse(socket.handshake.headers.cookie);
-    // console.log(`in cookieHeader !: ${cookief}`);
-    // if(cookief) {
-    //     console.log(`in cookieHeader !: ${cookief}`);
-    // }
-    // if(cookies) {
-    //     console.log(`in cookieHeader: ${cookies}`)
-    //
-    // }
-    // const username = socket.handshake.auth.username;
 
     if(!token) {
         throw new Error("Unauthorized Client");
@@ -39,4 +24,4 @@ const jwtVerifier = (socket, next) => {
 }
 
 
-module.exports = jwtVerifier;
+module.exports = jwtSocketHandler;
