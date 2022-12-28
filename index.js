@@ -59,7 +59,7 @@ const io = new Server(9000, {
 // io.use(cors(corsOptions));
 io.use(jwtHandler);
 io.on("connection", (socket) => {
-  console.log(socket.handshake.auth);
+  console.log("on connection", socket.handshake.auth);
   socket.emit("token", socket.handshake.auth);
 })
 // io.use(cors(corsOptions));
