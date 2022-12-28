@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 
 const {Schema} = require("mongoose");
 
-const userSchema = new Schema({
+const consultantSchema = new Schema({
     username: {
         type: String,
         required: true
@@ -22,10 +22,10 @@ const userSchema = new Schema({
     },
     available: {
         type: Boolean,
-        default: false
+        default: true
     },
     refreshToken: String
 });
 
 
-module.exports = mongoose.model('User', userSchema);
+module.exports = mongoose.model('Consultant', consultantSchema);

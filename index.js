@@ -21,7 +21,8 @@ const auth = require('./routers/auth');
 const refresh = require('./routers/refresh');
 const register = require('./routers/register');
 const logout = require('./routers/logout');
-const modify = require('./routers/modify');
+
+const allUsers = require('./routers/users');
 const mongodb = require('./db/mongo');
 
 app.use(express.json());
@@ -38,7 +39,8 @@ app.use('/register', register);
 
 app.use('/auth', auth);
 app.use('/refresh', refresh);
-app.use('/modify', modify);
+app.use('/users', allUsers);
+
 app.use(jwtRouterHandler);
 app.use(verifyRoles(rolesList.Admin, rolesList.User));
 app.use('/logout', logout);
