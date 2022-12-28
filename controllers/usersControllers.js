@@ -10,6 +10,7 @@ const allUsers = async (req, res) =>  {
 
 const userById = async (req, res) =>  {
     const id = req.body.id;
+    if(!id) return res.status(400).json('id is required!');
     const user = await User.findById(id).select('-password').lean().exec();
     if (!user) return res.sendStatus(204);
     return res.json(user);
