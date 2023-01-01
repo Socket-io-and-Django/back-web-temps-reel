@@ -34,7 +34,23 @@ const maintenanceAppointments = [
   // },
 ];
 
-let nextRoadAppointmentId = 3;
+let nextRevisionId = 3;
+const revisionAppointments = [
+  {
+    id: 1,
+    date: new Date("December 13, 2022 15:00:00"),
+  },
+  {
+    id: 2,
+    date: new Date("December 15, 2022 10:00:00"),
+  },
+  // {
+  //   id: 3,
+  //   date: new Date("December 16, 2022 13:00:00"),
+  // },
+];
+
+let nextRoadAppointmentId = 4;
 const roadAppointments = [
   // {
   //   id: 1,
@@ -92,6 +108,7 @@ io.on("connection", (socket) => {
 
   let vehiculeInfo = {};
   let availableMaintenanceDates = [];
+  let availableRevisionDates = [];
 
   const calcAvailableMaintenanceDates = () => {
     let nextAvailableMaintenanceId = 1;
@@ -137,9 +154,49 @@ io.on("connection", (socket) => {
     }
   };
 
-  // const calcAvailableMaintenanceDatesNextWeek = () => {
-
-  // }
+  const calcAvailableRevisionDates = () => {
+    let nextAvailableRevisionId = 1;
+    let today = new Date("2022-12-23");
+    // let today = new Date();
+    let currentDay = today.getDay();
+    availableRevisionDates = [];
+    for (let day = today.getDay(); day < 6; day++) {
+      if (
+        !revisionAppointments.some(
+          (e) => e.date.getDate() === addDays(today, day - currentDay).getDate()
+        )
+      ) {
+        if (day > 0 && day < 6) {
+          availableRevisionDates.push({
+            id: nextAvailableRevisionId,
+            date: addDays(today, day - currentDay),
+          });
+          nextAvailableRevisionId += 1;
+        }
+      }
+    }
+    if (availableRevisionDates.length === 0) {
+      today = getNextMonday();
+      let currentDay = today.getDay();
+      availableRevisionDates = [];
+      for (let day = today.getDay(); day < 6; day++) {
+        if (
+          !revisionAppointments.some(
+            (e) =>
+              e.date.getDate() === addDays(today, day - currentDay).getDate()
+          )
+        ) {
+          if (day > 0 && day < 6) {
+            availableRevisionDates.push({
+              id: nextAvailableRevisionId,
+              date: addDays(today, day - currentDay),
+            });
+            nextAvailableRevisionId += 1;
+          }
+        }
+      }
+    }
+  };
 
   socket.on("disconnect", () => {
     console.log("user disconnected");
@@ -234,7 +291,6 @@ io.on("connection", (socket) => {
       kmSinceLastMaintenance: res,
     };
     if (vehiculeInfo.kmSinceLastMaintenance >= 10000) {
-      // TODO rdv
       calcAvailableMaintenanceDates();
       sendMessage(socket, "ask_appointment_date", {
         from: "server",
@@ -256,8 +312,28 @@ io.on("connection", (socket) => {
   socket.on("send_do_revision", (res) => {
     if (res === 1) {
       // TODO demande rdv
+      calcAvailableRevisionDates();
+      sendMessage(socket, "ask_revision_date", {
+        from: "server",
+        txt: availableRevisionDates,
+      });
     } else {
       socket.emit("reset_chat");
+    }
+  });
+
+  socket.on("send_revision_date", (res) => {
+    if (availableRevisionDates.some((e) => e.id === res)) {
+      revisionAppointments.push({
+        id: nextRevisionId,
+        date: availableRevisionDates.find((e) => e.id === res).date,
+      });
+      nextRevisionId += 1;
+      socket.emit("revision_appointment_added", {
+        from: "server",
+        txt: "Votre rendez-vous a été sauvegardé !",
+      });
+      socket.broadcast.emit("revision_appointment_added_by_other_user");
     }
   });
 
