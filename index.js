@@ -315,7 +315,7 @@ io.on("connection", (socket) => {
           )
         ) {
           if (day > 0 && day < 6) {
-            availableRoadDates.push({
+            availableOffroadDates.push({
               id: nextAvailableOffroadId,
               date: addDays(today, day - currentDay),
             });
