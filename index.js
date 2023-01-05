@@ -65,6 +65,40 @@ const roadAppointments = [
     date: new Date("December 29, 2022 13:00:00"),
   },
 ];
+
+
+let nextOffroadAppointmentId = 4;
+const offroadAppointments = [
+  // {
+  //   id: 1,
+  //   date: new Date("December 13, 2022 15:00:00"),
+  // },
+  {
+    id: 2,
+    date: new Date("December 28, 2022 10:00:00"),
+  },
+  {
+    id: 3,
+    date: new Date("December 29, 2022 13:00:00"),
+  },
+];
+
+
+let nextSportAppointmentId = 4;
+const sportAppointments = [
+  // {
+  //   id: 1,
+  //   date: new Date("December 13, 2022 15:00:00"),
+  // },
+  {
+    id: 2,
+    date: new Date("December 28, 2022 10:00:00"),
+  },
+  {
+    id: 3,
+    date: new Date("December 29, 2022 13:00:00"),
+  },
+];
 // End Fake data
 
 const startChatBot = (socket) => {
@@ -107,8 +141,14 @@ io.on("connection", (socket) => {
   console.log("Anonymous client connected");
 
   let vehiculeInfo = {};
+  // appointments
   let availableMaintenanceDates = [];
   let availableRevisionDates = [];
+
+  // vehicule info
+  let availableRoadDates = [];
+  let availableOffroadDates = [];
+  let availableSportDates = [];
 
   const calcAvailableMaintenanceDates = () => {
     let nextAvailableMaintenanceId = 1;
@@ -192,6 +232,138 @@ io.on("connection", (socket) => {
               date: addDays(today, day - currentDay),
             });
             nextAvailableRevisionId += 1;
+          }
+        }
+      }
+    }
+  };
+
+  const calcAvailableRoadDates = () => {
+    let nextAvailableRoadId = 1;
+    let today = new Date("2022-12-23");
+    // let today = new Date();
+    let currentDay = today.getDay();
+    availableRoadDates = [];
+    for (let day = today.getDay(); day < 6; day++) {
+      if (
+        !roadAppointments.some(
+          (e) => e.date.getDate() === addDays(today, day - currentDay).getDate()
+        )
+      ) {
+        if (day > 0 && day < 6) {
+          availableRoadDates.push({
+            id: nextAvailableRoadId,
+            date: addDays(today, day - currentDay),
+          });
+          nextAvailableRoadId += 1;
+        }
+      }
+    }
+    if (availableRoadDates.length === 0) {
+      today = getNextMonday();
+      let currentDay = today.getDay();
+      availableRoadDates = [];
+      for (let day = today.getDay(); day < 6; day++) {
+        if (
+          !roadAppointments.some(
+            (e) =>
+              e.date.getDate() === addDays(today, day - currentDay).getDate()
+          )
+        ) {
+          if (day > 0 && day < 6) {
+            availableRoadDates.push({
+              id: nextAvailableRoadId,
+              date: addDays(today, day - currentDay),
+            });
+            nextAvailableRoadId += 1;
+          }
+        }
+      }
+    }
+  };
+
+  const calcAvailableOffroadDates = () => {
+    let nextAvailableOffroadId = 1;
+    let today = new Date("2022-12-23");
+    // let today = new Date();
+    let currentDay = today.getDay();
+    availableOffroadDates = [];
+    for (let day = today.getDay(); day < 6; day++) {
+      if (
+        !offroadAppointments.some(
+          (e) => e.date.getDate() === addDays(today, day - currentDay).getDate()
+        )
+      ) {
+        if (day > 0 && day < 6) {
+          availableOffroadDates.push({
+            id: nextAvailableOffroadId,
+            date: addDays(today, day - currentDay),
+          });
+          nextAvailableOffroadId += 1;
+        }
+      }
+    }
+    if (availableOffroadDates.length === 0) {
+      today = getNextMonday();
+      let currentDay = today.getDay();
+      availableOffroadDates = [];
+      for (let day = today.getDay(); day < 6; day++) {
+        if (
+          !offroadAppointments.some(
+            (e) =>
+              e.date.getDate() === addDays(today, day - currentDay).getDate()
+          )
+        ) {
+          if (day > 0 && day < 6) {
+            availableRoadDates.push({
+              id: nextAvailableOffroadId,
+              date: addDays(today, day - currentDay),
+            });
+            nextAvailableOffroadId += 1;
+          }
+        }
+      }
+    }
+  };
+
+  const calcAvailableSportDates = () => {
+    let nextAvailableSportId = 1;
+    let today = new Date("2022-12-23");
+    // let today = new Date();
+    let currentDay = today.getDay();
+    availableSportDates = [];
+    for (let day = today.getDay(); day < 6; day++) {
+      if (
+        !sportAppointments.some(
+          (e) => e.date.getDate() === addDays(today, day - currentDay).getDate()
+        )
+      ) {
+        if (day > 0 && day < 6) {
+          availableSportDates.push({
+            id: nextAvailableSportId,
+            date: addDays(today, day - currentDay),
+          });
+          nextAvailableSportId += 1;
+        }
+      }
+    }
+    if (availableSportDates.length === 0) {
+      today = getNextMonday();
+      let currentDay = today.getDay();
+      availableSportDates = [];
+      for (let day = today.getDay(); day < 6; day++) {
+        if (
+          !sportAppointments.some(
+            (e) =>
+              e.date.getDate() === addDays(today, day - currentDay).getDate()
+          )
+        ) {
+          if (day > 0 && day < 6) {
+            availableSportDates.push({
+              id: nextAvailableSportId,
+              date: addDays(today, day - currentDay),
+            });
+            nextAvailableSportId += 1;
           }
         }
       }
@@ -339,14 +511,69 @@ io.on("connection", (socket) => {
 
   socket.on("send_usage_type", (res) => {
     if (res === 1) {
-      // TODO demande rdv routier
-      socket.emit("reset_chat");
+      calcAvailableRoadDates();
+      sendMessage(socket, "ask_road_appointment_date", {
+        from: "server",
+        txt: availableRoadDates,
+      });
     } else if (res === 2) {
-      // TODO demande rdv tout-terrain
-      socket.emit("reset_chat");
+      calcAvailableOffroadDates();
+      sendMessage(socket, "ask_offroad_appointment_date", {
+        from: "server",
+        txt: availableOffroadDates,
+      });
     } else {
-      // TODO demande rdv sportif
-      socket.emit("reset_chat");
+      calcAvailableSportDates();
+      sendMessage(socket, "ask_sport_appointment_date", {
+        from: "server",
+        txt: availableSportDates,
+      });
+    }
+  });
+
+  socket.on("send_road_appointment_date", (res) => {
+    if (availableRoadDates.some((e) => e.id === res)) {
+      roadAppointments.push({
+        id: nextRoadAppointmentId,
+        date: availableRoadDates.find((e) => e.id === res).date,
+      });
+      nextRoadAppointmentId += 1;
+      socket.emit("road_appointment_added", {
+        from: "server",
+        txt: "Votre rendez-vous a été sauvegardé !",
+      });
+      socket.broadcast.emit("road_appointment_added_by_other_user");
+    }
+  });
+
+  socket.on("send_offroad_appointment_date", (res) => {
+    console.log(res)
+    if (availableOffroadDates.some((e) => e.id === res)) {
+      offroadAppointments.push({
+        id: nextOffroadAppointmentId,
+        date: availableOffroadDates.find((e) => e.id === res).date,
+      });
+      nextOffroadAppointmentId += 1;
+      socket.emit("offroad_appointment_added", {
+        from: "server",
+        txt: "Votre rendez-vous a été sauvegardé !",
+      });
+      socket.broadcast.emit("offroad_appointment_added_by_other_user");
+    }
+  });
+
+  socket.on("send_sport_appointment_date", (res) => {
+    if (availableSportDates.some((e) => e.id === res)) {
+      sportAppointments.push({
+        id: nextSportAppointmentId,
+        date: availableSportDates.find((e) => e.id === res).date,
+      });
+      nextSportAppointmentId += 1;
+      socket.emit("sport_appointment_added", {
+        from: "server",
+        txt: "Votre rendez-vous a été sauvegardé !",
+      });
+      socket.broadcast.emit("sport_appointment_added_by_other_user");
     }
   });
 
