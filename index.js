@@ -128,6 +128,13 @@ io.on('connection', (socket) => {
       io.to(user.room).emit('message', formatMessage( user.username ,message));
     });
 
+    // when user leaving room
+    socket.on("leavingRoom", () => {
+    socket.leave(user.room);
+    socket.to(user.room).emit("chatMessage", `${user.username} has left the room`);
+    user.room = user.id;
+  });
+
     // when a user disconnect
     socket.on("disconnect", () => {
       console.log("user disconnected");
@@ -135,6 +142,7 @@ io.on('connection', (socket) => {
       user.room = user.id;
       socket.broadcast.emit("chatMessage", "A user has been disconnected");
     });
+
     //
     // welcome new user
     // socket.emit('message', formatMessage(BotName,`${user.username} has accept your request`));
@@ -160,31 +168,6 @@ io.on('connection', (socket) => {
   // });
   // socket.emit( "message", user);
   socket.on('joinRoom', (room) => {
-    // socket.join(room);
-    // console.log("acceptToChat socket ", Object.keys(io.sockets.sockets))
-    // socket.to(room).emit('message', formatMessage(BotName,`${user.username} has accept your request`));
-    //
-    // // broadcast when a user connect
-    // // socket.to(id).emit('message', formatMessage(BotName,`${user.username} has join the chat`));
-    //
-    // // send users and room info
-    // io.to(room).emit('roomUsers', {
-    //   room: user.room,
-    //   users: getRoomUsers(user.room)
-    // });
-    //
-    // // listen for chatMessage
-    // socket.on('chatMessage', (message) => {
-    //   const user = getCurrentUser(socket.id);
-    //   io.to(room).emit('message', formatMessage( user.username ,message));
-    // });
-    //
-    // // when a user disconnect
-    // socket.on("disconnect", () => {
-    //   console.log("user disconnected");
-    //   socket.leave(room);
-    //   socket.broadcast.emit("chatMessage", "A user has been disconnected");
-    // });
   });
   //
   //   // welcome new user
@@ -206,12 +189,7 @@ io.on('connection', (socket) => {
   //     io.to(id).emit('message', formatMessage( user.username ,message));
   //   });
   //
-  //   // when a user disconnect
-    socket.on("disconnect", () => {
-      console.log("user disconnected");
-      socket.leave(user.room);
-      socket.broadcast.emit("chat message", "A user has been disconnected");
-    });
+  //
   //
   //   //
   //   // // welcome new user
