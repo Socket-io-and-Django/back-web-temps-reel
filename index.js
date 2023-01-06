@@ -6,10 +6,12 @@ const { Server } = require('socket.io');
 const cors = require('cors');
 
 
-const coolieParser = require('cookie-parser');
+// const coolieParser = require('cookie-parser');
 const path = require('path');
 // const formatMessage = require('./utils/messages')
 // const {userJoin, getCurrentUser, userLeave, getRoomUsers} = require('./utils/users');
+
+// middlewares
 const jwtSocketHandler = require('./middleware/jwtSocketHandler');
 const jwtRouterHandler = require('./middleware/jwtRoutersHandler');
 const credential = require('./middleware/credentials');
@@ -17,35 +19,54 @@ const corsOptions = require('./config/corsOptions');
 const rolesList = require('./config/rolesList');
 const verifyRoles = require('./middleware/verifyRoles');
 
+// routes
 const auth = require('./routers/auth');
 const refresh = require('./routers/refresh');
 const register = require('./routers/register');
 const logout = require('./routers/logout');
-
 const allUsers = require('./routers/users');
+
+// Data Base
 const mongodb = require('./db/mongo');
 
+// utils
+const {
+  userJoin,
+  getCurrentUser,
+  userLeave,
+  getRoomUsers,
+  getConsultants,
+  getOnlineUsers,
+  addToWaitingList,
+  getWaitingList,
+  leaveWaitingList
+} = require('./utils/users');
+const formatMessage = require('./utils/messages');
+
+// Constants
+const BotName = 'Chat Bot';
+const PORT = process.env.PORT || 3000;
+const PublicRoom = "Public Room"
 app.use(express.json());
 app.use(credential);
 
 app.use(cors(corsOptions));
 
 // set static folder
-app.use(express.static(path.join(__dirname, 'public')));
+// app.use(express.static(path.join(__dirname, 'public')));
 
 // app.use(coolieParser);
 
-app.use('/register', register);
 
+app.use('/register', register);
 app.use('/auth', auth);
 app.use('/refresh', refresh);
+// app.use(jwtRouterHandler);
 app.use('/users', allUsers);
 
-app.use(jwtRouterHandler);
-app.use(verifyRoles(rolesList.Admin, rolesList.User));
+// app.use(verifyRoles(rolesList.User));
 app.use('/logout', logout);
 
-const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`listening on *:${PORT}`);
 });
@@ -56,11 +77,164 @@ const io = new Server(9000, {
     origin: 'http://localhost:8080'
   }
 });
+
+// function addToWaitList (user, roomWaitingList) {
+//   roomWaitingList.push(user);
+//   console.log("roomWaitingList: ", roomWaitingList);
+//
+// };
+
 // io.use(cors(corsOptions));
 io.use(jwtSocketHandler);
-io.on("connection", (socket) => {
-  console.log("on connection", socket.handshake.auth);
-  socket.emit("token", socket.handshake.auth);
+io.on('connection', (socket) => {
+  // console.log("on connection", socket.handshake.auth);
+  const user = userJoin(socket.id, socket.handshake.auth.username, socket.handshake.auth.roles, PublicRoom);
+  socket.emit( 'roles', user.roles);
+
+  socket.emit( 'message', formatMessage(BotName,`Welcome ${user.username}`));
+  socket.emit('availableConsultants', getConsultants());
+  // socket.join(user.room)
+  socket.emit('waitingList',  getWaitingList(user.id));
+
+
+  socket.on('askToChat', (id) => {
+    io.to(id).emit('message', formatMessage(user.username, 'askToChat'));
+    addToWaitingList(id, user);
+    io.to(id).emit("waitingList", getWaitingList(id));
+    const room = `${id}${user.id}`
+    console.log("askToChat socket ", room)
+    user.room = room;
+    socket.join(room);
+  });
+
+  socket.on('acceptToChat', (id) => {
+    leaveWaitingList(id, user);
+    const room = `${user.id}${id}`
+    user.room = room;
+    socket.join(room);
+    socket.to(room).emit('message', formatMessage(BotName, `${user.username} has accept your request`));
+  });
+    // broadcast when a user connect
+    // socket.to(id).emit('message', formatMessage(BotName,`${user.username} has join the chat`));
+
+    // send users and room info
+    io.to(user.room).emit('roomUsers', {
+      users: getRoomUsers(user.room)
+    });
+
+    // listen for chatMessage
+    socket.on('chatMessage', (message) => {
+      const user = getCurrentUser(socket.id);
+      io.to(user.room).emit('message', formatMessage( user.username ,message));
+    });
+
+    // when a user disconnect
+    socket.on("disconnect", () => {
+      console.log("user disconnected");
+      socket.leave(user.room);
+      user.room = user.id;
+      socket.broadcast.emit("chatMessage", "A user has been disconnected");
+    });
+    //
+    // welcome new user
+    // socket.emit('message', formatMessage(BotName,`${user.username} has accept your request`));
+
+  // });
+
+
+  // socket.on('chatMessage', (message) => {
+  //   io.to(user.room).emit('message', formatMessage( user.username ,message));
+  // })
+  // socket.on('disconnect', () => {
+  //   const user = userLeave(socket.id);
+  //   console.log("disconnect: ", user, "users on ", getOnlineUsers())
+  //
+  //   if(user) {
+  //     io.to(user.room).emit('message', formatMessage(BotName,`${user.username} had left`));
+  //     // send users and room info
+  //     io.to(user.room).emit('roomUsers', {
+  //       room: user.room,
+  //       users: getRoomUsers(user.room)
+  //     });
+  //   }
+  // });
+  // socket.emit( "message", user);
+  socket.on('joinRoom', (room) => {
+    // socket.join(room);
+    // console.log("acceptToChat socket ", Object.keys(io.sockets.sockets))
+    // socket.to(room).emit('message', formatMessage(BotName,`${user.username} has accept your request`));
+    //
+    // // broadcast when a user connect
+    // // socket.to(id).emit('message', formatMessage(BotName,`${user.username} has join the chat`));
+    //
+    // // send users and room info
+    // io.to(room).emit('roomUsers', {
+    //   room: user.room,
+    //   users: getRoomUsers(user.room)
+    // });
+    //
+    // // listen for chatMessage
+    // socket.on('chatMessage', (message) => {
+    //   const user = getCurrentUser(socket.id);
+    //   io.to(room).emit('message', formatMessage( user.username ,message));
+    // });
+    //
+    // // when a user disconnect
+    // socket.on("disconnect", () => {
+    //   console.log("user disconnected");
+    //   socket.leave(room);
+    //   socket.broadcast.emit("chatMessage", "A user has been disconnected");
+    // });
+  });
+  //
+  //   // welcome new user
+  //   socket.emit('message', formatMessage(BotName,`${user.username} has accept your request`));
+  //   socket.to(id).emit('message', formatMessage(BotName,`${user.username} has accept your request`));
+  //
+  //   // broadcast when a user connect
+  //   socket.to(id).emit('message', formatMessage(BotName,`${user.username} has join the chat`));
+  //
+  //   // send users and room info
+  //   io.to(id).emit('roomUsers', {
+  //     room: user.room,
+  //     users: getRoomUsers(user.room)
+  //   });
+  //
+  //   // listen for chatMessage
+  //   socket.on('chatMessage', (message) => {
+  //     const user = getCurrentUser(socket.id);
+  //     io.to(id).emit('message', formatMessage( user.username ,message));
+  //   });
+  //
+  //   // when a user disconnect
+    socket.on("disconnect", () => {
+      console.log("user disconnected");
+      socket.leave(user.room);
+      socket.broadcast.emit("chat message", "A user has been disconnected");
+    });
+  //
+  //   //
+  //   // // welcome new user
+  //   // socket.emit('message', formatMessage(BotName,'welcome to chat'));
+  //   //
+  //   // // broadcast when a user connect
+  //   // socket.to(user.room).emit('message', formatMessage(BotName,`${user.username} has join the chat`));
+  //   //
+  //   // // send users and room info
+  //   // io.to(user.room).emit('roomUsers', {
+  //   //   room: user.room,
+  //   //   users: getRoomUsers(user.room)
+  //   // });
+  //   //
+  //   // // listen for chatMessage
+  //   // socket.on('chatMessage', (msg) => {
+  //   //   const user = getCurrentUser(socket.id);
+  //   //   io.to(user.room).emit('message', formatMessage( user.username ,msg));
+  //   // });
+  //   //
+  //   // // when a user disconnect
+  //
+  // });
 })
 // io.use(cors(corsOptions));
 // example of use verifyRole :
