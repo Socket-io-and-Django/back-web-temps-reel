@@ -78,154 +78,14 @@ const io = new Server(9000, {
   }
 });
 
-// function addToWaitList (user, roomWaitingList) {
-//   roomWaitingList.push(user);
-//   console.log("roomWaitingList: ", roomWaitingList);
-//
-// };
 
 // io.use(cors(corsOptions));
 io.use(jwtSocketHandler);
-io.on('connection', (socket) => {
-  // console.log("on connection", socket.handshake.auth);
-  const user = userJoin(socket.id, socket.handshake.auth.username, socket.handshake.auth.roles, PublicRoom);
-  socket.emit( 'roles', user.roles);
 
-  socket.emit( 'message', formatMessage(BotName,`Welcome ${user.username}`));
-  socket.emit('availableConsultants', getConsultants());
-  // socket.join(user.room)
-  socket.emit('waitingList',  getWaitingList(user.id));
+// aux function and fake data Chat Bot
 
 
-  socket.on('askToChat', (id) => {
-    io.to(id).emit('message', formatMessage(user.username, 'askToChat'));
-    addToWaitingList(id, user);
-    io.to(id).emit("waitingList", getWaitingList(id));
-    const room = `${id}${user.id}`
-    console.log("askToChat socket ", room)
-    user.room = room;
-    socket.join(room);
-  });
-
-  socket.on('acceptToChat', (id) => {
-    leaveWaitingList(id, user);
-    const room = `${user.id}${id}`
-    user.room = room;
-    socket.join(room);
-    socket.to(room).emit('message', formatMessage(BotName, `${user.username} has accept your request`));
-  });
-    // broadcast when a user connect
-    // socket.to(id).emit('message', formatMessage(BotName,`${user.username} has join the chat`));
-
-    // send users and room info
-    io.to(user.room).emit('roomUsers', {
-      users: getRoomUsers(user.room)
-    });
-
-    // listen for chatMessage
-    socket.on('chatMessage', (message) => {
-      const user = getCurrentUser(socket.id);
-      io.to(user.room).emit('message', formatMessage( user.username ,message));
-    });
-
-    // when user leaving room
-    socket.on("leavingRoom", () => {
-    socket.leave(user.room);
-    socket.to(user.room).emit("chatMessage", `${user.username} has left the room`);
-    user.room = user.id;
-  });
-
-    // when a user disconnect
-    socket.on("disconnect", () => {
-      console.log("user disconnected");
-      socket.leave(user.room);
-      user.room = user.id;
-      socket.broadcast.emit("chatMessage", "A user has been disconnected");
-    });
-
-    //
-    // welcome new user
-    // socket.emit('message', formatMessage(BotName,`${user.username} has accept your request`));
-
-  // });
-
-
-  // socket.on('chatMessage', (message) => {
-  //   io.to(user.room).emit('message', formatMessage( user.username ,message));
-  // })
-  // socket.on('disconnect', () => {
-  //   const user = userLeave(socket.id);
-  //   console.log("disconnect: ", user, "users on ", getOnlineUsers())
-  //
-  //   if(user) {
-  //     io.to(user.room).emit('message', formatMessage(BotName,`${user.username} had left`));
-  //     // send users and room info
-  //     io.to(user.room).emit('roomUsers', {
-  //       room: user.room,
-  //       users: getRoomUsers(user.room)
-  //     });
-  //   }
-  // });
-  // socket.emit( "message", user);
-  socket.on('joinRoom', (room) => {
-  });
-  //
-  //   // welcome new user
-  //   socket.emit('message', formatMessage(BotName,`${user.username} has accept your request`));
-  //   socket.to(id).emit('message', formatMessage(BotName,`${user.username} has accept your request`));
-  //
-  //   // broadcast when a user connect
-  //   socket.to(id).emit('message', formatMessage(BotName,`${user.username} has join the chat`));
-  //
-  //   // send users and room info
-  //   io.to(id).emit('roomUsers', {
-  //     room: user.room,
-  //     users: getRoomUsers(user.room)
-  //   });
-  //
-  //   // listen for chatMessage
-  //   socket.on('chatMessage', (message) => {
-  //     const user = getCurrentUser(socket.id);
-  //     io.to(id).emit('message', formatMessage( user.username ,message));
-  //   });
-  //
-  //
-  //
-  //   //
-  //   // // welcome new user
-  //   // socket.emit('message', formatMessage(BotName,'welcome to chat'));
-  //   //
-  //   // // broadcast when a user connect
-  //   // socket.to(user.room).emit('message', formatMessage(BotName,`${user.username} has join the chat`));
-  //   //
-  //   // // send users and room info
-  //   // io.to(user.room).emit('roomUsers', {
-  //   //   room: user.room,
-  //   //   users: getRoomUsers(user.room)
-  //   // });
-  //   //
-  //   // // listen for chatMessage
-  //   // socket.on('chatMessage', (msg) => {
-  //   //   const user = getCurrentUser(socket.id);
-  //   //   io.to(user.room).emit('message', formatMessage( user.username ,msg));
-  //   // });
-  //   //
-  //   // // when a user disconnect
-  //
-  // });
-})
-// io.use(cors(corsOptions));
-// example of use verifyRole :
-// .get(verifyRole(rolesList.Admin, rolesList.User),
-/*
-const io = new Server(server, {
-  cors: {
-    origin: "http://localhost:5173",
-  },
-  cookie: true
-});
-
-let users = [];
+// let users = [];
 
 // Fake data
 const contact = {
@@ -336,9 +196,9 @@ function addDays(date, days) {
 function getNextMonday(date = new Date()) {
   const dateCopy = new Date(date.getTime());
   const nextMonday = new Date(
-    dateCopy.setDate(
-      dateCopy.getDate() + ((7 - dateCopy.getDay() + 1) % 7 || 7)
-    )
+      dateCopy.setDate(
+          dateCopy.getDate() + ((7 - dateCopy.getDay() + 1) % 7 || 7)
+      )
   );
 
   return nextMonday;
@@ -348,24 +208,69 @@ const sendMessage = (socket, emitType, value) => {
   socket.emit(emitType, value);
 };
 
-app.use(express.json());
-// app.use(coolieParser);
+//
+
+io.on('connection', (socket) => {
+  // console.log("on connection", socket.handshake.auth);
+  const user = userJoin(socket.id, socket.handshake.auth.username, socket.handshake.auth.roles, PublicRoom);
+  socket.emit( 'roles', user.roles);
+
+  socket.emit( 'message', formatMessage(BotName,`Welcome ${user.username}`));
+  socket.emit('availableConsultants', getConsultants());
+  // socket.join(user.room)
+  socket.emit('waitingList',  getWaitingList(user.id));
 
 
-// set static folder
+  socket.on('askToChat', (id) => {
+    io.to(id).emit('message', formatMessage(user.username, 'askToChat'));
+    addToWaitingList(id, user);
+    io.to(id).emit("waitingList", getWaitingList(id));
+    const room = `${id}${user.id}`
+    console.log("askToChat socket ", room)
+    user.room = room;
+    socket.join(room);
+  });
 
-app.use('/register', register);
-app.use('/auth', auth);
-app.use('/refresh', refresh);
-app.use('/logout', logout);
+  socket.on('acceptToChat', (id) => {
+    leaveWaitingList(id, user);
+    const room = `${user.id}${id}`
+    user.room = room;
+    socket.join(room);
+    socket.to(room).emit('message', formatMessage(BotName, `${user.username} has accept your request`));
+  });
+    // broadcast when a user connect
+    // socket.to(id).emit('message', formatMessage(BotName,`${user.username} has join the chat`));
 
-// app.use(jwtSocketHandler);
-app.use(express.static(path.join(__dirname, 'public')));
-app.get("/", (req, res) => {
-  res.sendFile(__dirname + "/index.html");
-});
-io.on("connection", (socket) => {
-  console.log("Anonymous client connected");
+    // send users and room info
+    io.to(user.room).emit('roomUsers', {
+      users: getRoomUsers(user.room)
+    });
+
+    // listen for chatMessage
+    socket.on('chatMessage', (message) => {
+      const user = getCurrentUser(socket.id);
+      io.to(user.room).emit('message', formatMessage( user.username ,message));
+    });
+
+    // when user leaving room
+    socket.on("leavingRoom", () => {
+    socket.leave(user.room);
+    socket.to(user.room).emit("chatMessage", `${user.username} has left the room`);
+    user.room = user.id;
+  });
+
+    // when a user disconnect
+    socket.on("disconnect", () => {
+      console.log("user disconnected");
+      socket.leave(user.room);
+      user.room = user.id;
+      socket.broadcast.emit("chatMessage", "A user has been disconnected");
+    });
+
+  socket.on('joinRoom', (room) => {
+  });
+
+  // chat Bot
 
   let vehiculeInfo = {};
   // appointments
@@ -385,9 +290,9 @@ io.on("connection", (socket) => {
     availableMaintenanceDates = [];
     for (let day = today.getDay(); day < 6; day++) {
       if (
-        !maintenanceAppointments.some(
-          (e) => e.date.getDate() === addDays(today, day - currentDay).getDate()
-        )
+          !maintenanceAppointments.some(
+              (e) => e.date.getDate() === addDays(today, day - currentDay).getDate()
+          )
       ) {
         if (day > 0 && day < 6) {
           availableMaintenanceDates.push({
@@ -404,10 +309,10 @@ io.on("connection", (socket) => {
       availableMaintenanceDates = [];
       for (let day = today.getDay(); day < 6; day++) {
         if (
-          !maintenanceAppointments.some(
-            (e) =>
-              e.date.getDate() === addDays(today, day - currentDay).getDate()
-          )
+            !maintenanceAppointments.some(
+                (e) =>
+                    e.date.getDate() === addDays(today, day - currentDay).getDate()
+            )
         ) {
           if (day > 0 && day < 6) {
             availableMaintenanceDates.push({
@@ -429,9 +334,9 @@ io.on("connection", (socket) => {
     availableRevisionDates = [];
     for (let day = today.getDay(); day < 6; day++) {
       if (
-        !revisionAppointments.some(
-          (e) => e.date.getDate() === addDays(today, day - currentDay).getDate()
-        )
+          !revisionAppointments.some(
+              (e) => e.date.getDate() === addDays(today, day - currentDay).getDate()
+          )
       ) {
         if (day > 0 && day < 6) {
           availableRevisionDates.push({
@@ -448,10 +353,10 @@ io.on("connection", (socket) => {
       availableRevisionDates = [];
       for (let day = today.getDay(); day < 6; day++) {
         if (
-          !revisionAppointments.some(
-            (e) =>
-              e.date.getDate() === addDays(today, day - currentDay).getDate()
-          )
+            !revisionAppointments.some(
+                (e) =>
+                    e.date.getDate() === addDays(today, day - currentDay).getDate()
+            )
         ) {
           if (day > 0 && day < 6) {
             availableRevisionDates.push({
@@ -473,9 +378,9 @@ io.on("connection", (socket) => {
     availableRoadDates = [];
     for (let day = today.getDay(); day < 6; day++) {
       if (
-        !roadAppointments.some(
-          (e) => e.date.getDate() === addDays(today, day - currentDay).getDate()
-        )
+          !roadAppointments.some(
+              (e) => e.date.getDate() === addDays(today, day - currentDay).getDate()
+          )
       ) {
         if (day > 0 && day < 6) {
           availableRoadDates.push({
@@ -492,10 +397,10 @@ io.on("connection", (socket) => {
       availableRoadDates = [];
       for (let day = today.getDay(); day < 6; day++) {
         if (
-          !roadAppointments.some(
-            (e) =>
-              e.date.getDate() === addDays(today, day - currentDay).getDate()
-          )
+            !roadAppointments.some(
+                (e) =>
+                    e.date.getDate() === addDays(today, day - currentDay).getDate()
+            )
         ) {
           if (day > 0 && day < 6) {
             availableRoadDates.push({
@@ -517,9 +422,9 @@ io.on("connection", (socket) => {
     availableOffroadDates = [];
     for (let day = today.getDay(); day < 6; day++) {
       if (
-        !offroadAppointments.some(
-          (e) => e.date.getDate() === addDays(today, day - currentDay).getDate()
-        )
+          !offroadAppointments.some(
+              (e) => e.date.getDate() === addDays(today, day - currentDay).getDate()
+          )
       ) {
         if (day > 0 && day < 6) {
           availableOffroadDates.push({
@@ -536,10 +441,10 @@ io.on("connection", (socket) => {
       availableOffroadDates = [];
       for (let day = today.getDay(); day < 6; day++) {
         if (
-          !offroadAppointments.some(
-            (e) =>
-              e.date.getDate() === addDays(today, day - currentDay).getDate()
-          )
+            !offroadAppointments.some(
+                (e) =>
+                    e.date.getDate() === addDays(today, day - currentDay).getDate()
+            )
         ) {
           if (day > 0 && day < 6) {
             availableOffroadDates.push({
@@ -561,9 +466,9 @@ io.on("connection", (socket) => {
     availableSportDates = [];
     for (let day = today.getDay(); day < 6; day++) {
       if (
-        !sportAppointments.some(
-          (e) => e.date.getDate() === addDays(today, day - currentDay).getDate()
-        )
+          !sportAppointments.some(
+              (e) => e.date.getDate() === addDays(today, day - currentDay).getDate()
+          )
       ) {
         if (day > 0 && day < 6) {
           availableSportDates.push({
@@ -580,10 +485,10 @@ io.on("connection", (socket) => {
       availableSportDates = [];
       for (let day = today.getDay(); day < 6; day++) {
         if (
-          !sportAppointments.some(
-            (e) =>
-              e.date.getDate() === addDays(today, day - currentDay).getDate()
-          )
+            !sportAppointments.some(
+                (e) =>
+                    e.date.getDate() === addDays(today, day - currentDay).getDate()
+            )
         ) {
           if (day > 0 && day < 6) {
             availableSportDates.push({
@@ -650,7 +555,7 @@ io.on("connection", (socket) => {
       lastMaintenanceDate: res,
     };
     let yearDiff = Math.abs(
-      new Date(vehiculeInfo.lastMaintenanceDate).getFullYear() -
+        new Date(vehiculeInfo.lastMaintenanceDate).getFullYear() -
         new Date().getFullYear()
     );
     if (yearDiff > 1) {
@@ -817,16 +722,42 @@ io.on("connection", (socket) => {
       });
     }
   });
-});
 
+  // end chat Bot
+
+});
+// io.use(cors(corsOptions));
+// example of use verifyRole :
+// .get(verifyRole(rolesList.Admin, rolesList.User),
+
+// const io = new Server(server, {
+//   cors: {
+//     origin: "http://localhost:5173",
+//   },
+//   cookie: true
+// });
+
+
+// app.use(express.json());
+// app.use(coolieParser);
+
+
+// set static folder
+//
+// app.use('/register', register);
+// app.use('/auth', auth);
+// app.use('/refresh', refresh);
+// app.use('/logout', logout);
 
 // app.use(jwtSocketHandler);
+// app.use(express.static(path.join(__dirname, 'public')));
+// app.get("/", (req, res) => {
+//   res.sendFile(__dirname + "/index.html");
+// });
+// io.on("connection", (socket) => {
+//   console.log("Anonymous client connected");
+//
+// });
 
-const PORT = process.env.PORT || 3000;
-app.use(coolieParser);
 
-io.use(jwtSocketHandler)
-io.on("connection", socket => {
-  // console.log("connected")
-})
-*/
+
