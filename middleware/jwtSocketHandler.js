@@ -19,7 +19,7 @@ const jwtSocketHandler = (socket, next) => {
             socket.handshake.auth['roles'] = decoded.userInfo.roles;
         }
     );
-
+    console.log("jwtSocketHandler: ", socket.handshake.auth);
     next();
 }
 

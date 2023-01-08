@@ -9,7 +9,9 @@ function isConsultant(roles) {
 }
 // join user to chat
 function getConsultants() {
-    return onlineUsersList.filter(user => isConsultant(user.roles) === true);
+    const available =  onlineUsersList.filter(user => isConsultant(user.roles) === true && user.isAvailable);
+    console.log("avail: ", available);
+    return available;
 }
 function userJoin(id, username, roles, room) {
     const user = {id, username, roles, room};
