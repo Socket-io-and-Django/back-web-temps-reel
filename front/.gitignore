@@ -1,0 +1,35 @@
+.DS_Store
+node_modules
+fron-web-real/node_modules
+.npm
+.idea
+.env
+.ash_history
+.node_repl_history
+/dist
+
+## init project files
+#package-lock.json
+#package.json
+#!fron-web-real/package-lock.json
+#!fron-web-real/package.json
+
+
+# local env files
+.env.local
+.env.*.local
+
+# Log files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editor directories and files
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

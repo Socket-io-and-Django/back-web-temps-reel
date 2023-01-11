@@ -1,0 +1,137 @@
+<script setup>
+// @ is an alias to /src
+// import RegisterForm from "@/components/Register-form-app.vue";
+// import LogInApp from "@/components/LogIn-app.vue";
+import ButtonApp from "@/components/Button-app.vue";
+import {defineProps, ref} from "vue";
+import  { io } from "socket.io-client";
+import SendMessageApp from "@/components/Send-message-app.vue";
+import MessagesAreaApp from "@/components/Messages-area-app.vue";
+import ConsultantsAreaApp from "@/components/Consultants-area-app.vue";
+
+const messages = ref([]);
+const connected = ref(false);
+// const registered = ref(true);
+const availableConsultants = ref([]);
+const props = defineProps({
+  token: Object,
+})
+
+function sendMessage(message) {
+  socket.value.emit('chatMessage', message.text);
+  // messages.value.push(message);
+}
+function askToChat(id) {
+  socket.value.emit('askToChat', id);
+  // messages.value.push(message);
+}
+const socket = ref({});
+function connectToSocket(token) {
+  console.log("in connection front", token.accessToken)
+  socket.value = io("ws://localhost:9000", {
+    auth: {
+      token: token.accessToken
+    }
+  });
+  socket.value.on("connect_error",(er) => {
+    console.error("Oops! Authentication failed:", er.message, " , ", er.cause)
+  })
+  socket.value.on("connect", () => {
+    connected.value = true;
+  })
+  socket.value.on('availableConsultants', (available) => {
+    available.forEach( constant => {
+      console.log("consultant", constant)
+      availableConsultants.value.push(constant);
+    })
+    console.log("availableConsultants", availableConsultants.value)
+  })
+  // message from server
+  socket.value.on('message', message => {
+    messages.value.push(message);
+  })
+}
+</script>
+
+<template>
+  <div class="chat-area">
+      <button-app
+          v-show="props.token.accessToken !=='' "
+          v-on:btn-click="connectToSocket(props.token)"
+          v-bind:text="'connect'"
+          v-bind:color="'green'"
+      />
+      <MessagesAreaApp v-bind:messages="messages" />
+      <SendMessageApp
+          v-on:send-new-message="sendMessage"
+          v-bind:messagesNumber="messages.length"
+      />
+    <ConsultantsAreaApp
+        v-bind:consultants="availableConsultants"
+        v-on:ask-to-chat="askToChat"
+    />
+    <div >
+      <button-app
+          v-on:btn-click="connectToSocket(token)"
+          v-bind:text="'connect'"
+          v-bind:color="'green'"
+      />
+    </div>
+<!--    <div v-else>-->
+<!--      <RegisterForm-->
+<!--          v-if="!registered"-->
+<!--          v-on:add-new-user="addUser"/>-->
+<!--      <log-in-app-->
+<!--          v-else-->
+<!--          v-on:log-in-user="logInUser"/>-->
+
+<!--      <button-app-->
+<!--          v-if="!registered"-->
+<!--          v-on:btn-click="connectToSocket(token)"-->
+<!--          v-bind:text="'connect'"-->
+<!--          v-bind:color="'green'"-->
+<!--      />-->
+
+<!--    </div>-->
+  </div>
+  <FooterApp />
+
+</template>
+
+<style scoped>
+
+.chat-area {
+  margin-bottom: 40px;
+}
+
+.chat-area {
+  margin: 20px 0;
+}
+
+.chat-control label {
+  display: block;
+}
+
+.chat-area input {
+  width: 100%;
+  height: 40px;
+  margin: 5px;
+  padding: 3px 7px;
+  font-size: 17px;
+}
+
+.chat-area {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.chat-area label {
+  flex: 1;
+}
+
+.chat-area input {
+  flex: 2;
+  height: 20px;
+}
+</style>

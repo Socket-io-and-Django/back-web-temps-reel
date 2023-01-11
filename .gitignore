@@ -1,4 +1,6 @@
-/node_modules
+front/fron-web-real/node_modules/
+front/node_modules/
+node_modules/
 /.npm
 /.idea
 .env

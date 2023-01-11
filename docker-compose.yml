@@ -1,7 +1,7 @@
 version: "3"
 
 services:
-  node:
+  node_back:
     image: node:19-alpine3.16
     depends_on:
       - mongodb
@@ -9,11 +9,11 @@ services:
     working_dir: /home/node
     tty: true
     stdin_open: true
-    command: node
+#    command: node
 
     ports:
-      - 3000:3000
-      - 9001:9001
+      - "3000:3000"
+      - "9000:9000"
     volumes:
       - .:/home/node
 
@@ -25,9 +25,26 @@ services:
 #      - MONGO_INITRD_ROOT_USERNAME=$DB_USER
 #      - MONGO_INITRD_ROOT_PASSWORD=$DB_PASSWORD
     ports:
-      - 27017:27017
+      - "27017:27017"
     volumes:
       - mongodb:/data/db
+
+  node_front:
+    depends_on:
+      - node_back
+    build:
+      context: ./
+      dockerfile: front/Dockerfile.node
+    working_dir: /home/node
+    tty: true
+    stdin_open: true
+#    command: alias alias_name="command_to_run"
+
+
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./front:/home/node
 
 volumes:
   mongodb:
