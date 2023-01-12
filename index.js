@@ -1,33 +1,32 @@
-const express = require('express');
+const express = require("express");
 const app = express();
-const http = require('http');
+const http = require("http");
 const server = http.createServer(app);
-const { Server } = require('socket.io');
-const cors = require('cors');
-
+const { Server } = require("socket.io");
+const cors = require("cors");
 
 // const coolieParser = require('cookie-parser');
-const path = require('path');
+const path = require("path");
 // const formatMessage = require('./utils/messages')
 // const {userJoin, getCurrentUser, userLeave, getRoomUsers} = require('./utils/users');
 
 // middlewares
-const jwtSocketHandler = require('./middleware/jwtSocketHandler');
-const jwtRouterHandler = require('./middleware/jwtRoutersHandler');
-const credential = require('./middleware/credentials');
-const corsOptions = require('./config/corsOptions');
-const rolesList = require('./config/rolesList');
-const verifyRoles = require('./middleware/verifyRoles');
+const jwtSocketHandler = require("./middleware/jwtSocketHandler");
+const jwtRouterHandler = require("./middleware/jwtRoutersHandler");
+const credential = require("./middleware/credentials");
+const corsOptions = require("./config/corsOptions");
+const rolesList = require("./config/rolesList");
+const verifyRoles = require("./middleware/verifyRoles");
 
 // routes
-const auth = require('./routers/auth');
-const refresh = require('./routers/refresh');
-const register = require('./routers/register');
-const logout = require('./routers/logout');
-const allUsers = require('./routers/users');
+const auth = require("./routers/auth");
+const refresh = require("./routers/refresh");
+const register = require("./routers/register");
+const logout = require("./routers/logout");
+const allUsers = require("./routers/users");
 
 // Data Base
-const mongodb = require('./db/mongo');
+const mongodb = require("./db/mongo");
 
 // utils
 const {
@@ -39,14 +38,20 @@ const {
   getOnlineUsers,
   addToWaitingList,
   getWaitingList,
-  leaveWaitingList, isConsultant
-} = require('./utils/users');
-const formatMessage = require('./utils/messages');
+  leaveWaitingList,
+  isConsultant,
+} = require("./utils/users");
+const formatMessage = require("./utils/messages");
+const {
+  saveNewMaintenanceAppointment,
+  getAllMaintenanceAppointments,
+  getLastMaintenanceAppointmentId,
+} = require("./controllers/maintenanceAppointmentsController");
 
 // Constants
-const BotName = 'Chat Bot';
+const BotName = "Chat Bot";
 const PORT = process.env.PORT || 9000;
-const PublicRoom = "Public Room"
+const PublicRoom = "Public Room";
 app.use(express.json());
 app.use(credential);
 
@@ -57,15 +62,14 @@ app.use(cors(corsOptions));
 
 // app.use(coolieParser);
 
-
-app.use('/register', register);
-app.use('/auth', auth);
-app.use('/refresh', refresh);
+app.use("/register", register);
+app.use("/auth", auth);
+app.use("/refresh", refresh);
 // app.use(jwtRouterHandler);
-app.use('/users', allUsers);
+app.use("/users", allUsers);
 
 // app.use(verifyRoles(rolesList.User));
-app.use('/logout', logout);
+app.use("/logout", logout);
 
 server.listen(PORT, () => {
   console.log(`listening on *:${PORT}`);
@@ -73,15 +77,14 @@ server.listen(PORT, () => {
 // const io = new Server(9000, { allowRequest: cors(corsOptions)});
 
 const io = new Server(3000, {
-  cors:{
-    origin: 'http://localhost:8080'
-  }
+  cors: {
+    origin: "http://localhost:8080",
+  },
 });
 
 io.use(jwtSocketHandler);
 
 // aux function and fake data Chat Bot
-
 
 // let users = [];
 
@@ -91,21 +94,25 @@ const contact = {
   contactNumber: "0160293759",
 };
 
-let nextMaintenanceId = 4;
-const maintenanceAppointments = [
-  // {
-  //   id: 1,
-  //   date: new Date("December 13, 2022 15:00:00"),
-  // },
-  {
-    id: 2,
-    date: new Date("December 15, 2022 10:00:00"),
-  },
-  // {
-  //   id: 3,
-  //   date: new Date("December 16, 2022 13:00:00"),
-  // },
-];
+// let nextMaintenanceId = 4;
+// const maintenanceAppointments = [
+//   // {
+//   //   id: 1,
+//   //   date: new Date("December 13, 2022 15:00:00"),
+//   // },
+//   {
+//     id: 2,
+//     date: new Date("December 15, 2022 10:00:00"),
+//   },
+//   // {
+//   //   id: 3,
+//   //   date: new Date("December 16, 2022 13:00:00"),
+//   // },
+// ];
+const maintenanceAppointments = getAllMaintenanceAppointments();
+let nextMaintenanceId = getLastMaintenanceAppointmentId();
+
+console.log(maintenanceAppointments);
 
 let nextRevisionId = 3;
 const revisionAppointments = [
@@ -139,7 +146,6 @@ const roadAppointments = [
   },
 ];
 
-
 let nextOffroadAppointmentId = 4;
 const offroadAppointments = [
   // {
@@ -155,7 +161,6 @@ const offroadAppointments = [
     date: new Date("December 29, 2022 13:00:00"),
   },
 ];
-
 
 let nextSportAppointmentId = 4;
 const sportAppointments = [
@@ -194,9 +199,9 @@ function addDays(date, days) {
 function getNextMonday(date = new Date()) {
   const dateCopy = new Date(date.getTime());
   const nextMonday = new Date(
-      dateCopy.setDate(
-          dateCopy.getDate() + ((7 - dateCopy.getDay() + 1) % 7 || 7)
-      )
+    dateCopy.setDate(
+      dateCopy.getDate() + ((7 - dateCopy.getDay() + 1) % 7 || 7)
+    )
   );
 
   return nextMonday;
@@ -208,99 +213,112 @@ const sendMessage = (socket, emitType, value) => {
 
 //
 
-io.on('connection', (socket) => {
+io.on("connection", (socket) => {
   // console.log("on connection", socket.handshake.auth);
-  const user = userJoin(socket.id, socket.handshake.auth.username, socket.handshake.auth.roles, PublicRoom);
+  const user = userJoin(
+    socket.id,
+    socket.handshake.auth.username,
+    socket.handshake.auth.roles,
+    PublicRoom
+  );
   socket.join(user.room);
-  if(user.isAvailable){
-    io.emit('availableConsultants', getConsultants());
+  if (user.isAvailable) {
+    io.emit("availableConsultants", getConsultants());
   }
-  socket.emit( 'roles', user.roles);
+  socket.emit("roles", user.roles);
 
-  socket.emit( 'message', formatMessage(BotName,`Welcome ${user.username}`));
+  socket.emit("message", formatMessage(BotName, `Welcome ${user.username}`));
 
-  socket.emit('availableConsultants', getConsultants());
+  socket.emit("availableConsultants", getConsultants());
   // socket.join(user.room)
-  socket.emit('waitingList',  getWaitingList(user.id));
+  socket.emit("waitingList", getWaitingList(user.id));
 
-
-  socket.on('askToChat', (id) => {
-    io.to(id).emit('message', formatMessage(user.username, 'askToChat'));
+  socket.on("askToChat", (id) => {
+    io.to(id).emit("message", formatMessage(user.username, "askToChat"));
     addToWaitingList(id, user);
     io.to(id).emit("waitingList", getWaitingList(id));
-    const room = `${id}${user.id}`
+    const room = `${id}${user.id}`;
     socket.leave(user.room);
     user.room = room;
     socket.join(room);
   });
 
-  socket.on('acceptToChat', (id) => {
+  socket.on("acceptToChat", (id) => {
     leaveWaitingList(id, user);
-    const room = `${user.id}${id}`
+    const room = `${user.id}${id}`;
     socket.leave(user.room);
     user.room = room;
     user.isAvailable = false;
-    socket.emit("waitingList", getWaitingList(id))
-    io.emit('availableConsultants', getConsultants());
+    socket.emit("waitingList", getWaitingList(id));
+    io.emit("availableConsultants", getConsultants());
     socket.join(user.room);
-    socket.to(room).emit('message', formatMessage(BotName, `${user.username} has accept your request`));
+    socket
+      .to(room)
+      .emit(
+        "message",
+        formatMessage(BotName, `${user.username} has accept your request`)
+      );
   });
 
-  socket.on('leaveChat', () => {
+  socket.on("leaveChat", () => {
     const id = user.room.replace(user.id, "");
-    if(isConsultant(user.roles)){
+    if (isConsultant(user.roles)) {
       user.isAvailable = true;
-      io.emit('availableConsultants', getConsultants());
-    }
-    else{
+      io.emit("availableConsultants", getConsultants());
+    } else {
       leaveWaitingList(user.id, getCurrentUser(id));
     }
-    socket.to(user.room).emit('message', formatMessage(BotName, `${user.username} has left the chat`));
+    socket
+      .to(user.room)
+      .emit(
+        "message",
+        formatMessage(BotName, `${user.username} has left the chat`)
+      );
     socket.leave(user.room);
     user.room = PublicRoom;
     socket.join(user.room);
-    io.to(id).emit("waitingList", getWaitingList(id))
+    io.to(id).emit("waitingList", getWaitingList(id));
   });
-    // broadcast when a user connect
-    // socket.to(id).emit('message', formatMessage(BotName,`${user.username} has join the chat`));
+  // broadcast when a user connect
+  // socket.to(id).emit('message', formatMessage(BotName,`${user.username} has join the chat`));
 
-    // send users and room info
-    io.to(user.room).emit('roomUsers', {
-      users: getRoomUsers(user.room)
-    });
+  // send users and room info
+  io.to(user.room).emit("roomUsers", {
+    users: getRoomUsers(user.room),
+  });
 
-    // listen for chatMessage
-    socket.on('chatMessage', (message) => {
-      const user = getCurrentUser(socket.id);
-      io.to(user.room).emit('message', formatMessage( user.username ,message));
-    });
+  // listen for chatMessage
+  socket.on("chatMessage", (message) => {
+    const user = getCurrentUser(socket.id);
+    io.to(user.room).emit("message", formatMessage(user.username, message));
+  });
 
-    // when user leaving room
-    socket.on("leavingRoom", () => {
+  // when user leaving room
+  socket.on("leavingRoom", () => {
     socket.leave(user.room);
-    socket.to(user.room).emit("chatMessage", `${user.username} has left the room`);
+    socket
+      .to(user.room)
+      .emit("chatMessage", `${user.username} has left the room`);
     user.room = user.id;
   });
 
-    // when a user disconnect
-    socket.on("disconnect", () => {
-      console.log("user disconnected");
-      if(user.isAvailable){
-        user.isAvailable = false;
-        io.emit('availableConsultants', getConsultants());
-      }
-      socket.leave(user.room);
-      user.room = user.id;
-      socket.broadcast.emit("chatMessage", "A user has been disconnected");
-    });
-
-  socket.on('joinRoom', (room) => {
+  // when a user disconnect
+  socket.on("disconnect", () => {
+    console.log("user disconnected");
+    if (user.isAvailable) {
+      user.isAvailable = false;
+      io.emit("availableConsultants", getConsultants());
+    }
+    socket.leave(user.room);
+    user.room = user.id;
+    socket.broadcast.emit("chatMessage", "A user has been disconnected");
   });
 
-  // chat Bot
-  socket.on('chatBot', () => {
-    console.log("startChat ...")
+  socket.on("joinRoom", (room) => {});
 
+  // chat Bot
+  socket.on("chatBot", () => {
+    console.log("startChat ...");
 
     let vehiculeInfo = {};
     // appointments
@@ -320,9 +338,10 @@ io.on('connection', (socket) => {
       availableMaintenanceDates = [];
       for (let day = today.getDay(); day < 6; day++) {
         if (
-            !maintenanceAppointments.some(
-                (e) => e.date.getDate() === addDays(today, day - currentDay).getDate()
-            )
+          !maintenanceAppointments.some(
+            (e) =>
+              e.date.getDate() === addDays(today, day - currentDay).getDate()
+          )
         ) {
           if (day > 0 && day < 6) {
             availableMaintenanceDates.push({
@@ -339,10 +358,10 @@ io.on('connection', (socket) => {
         availableMaintenanceDates = [];
         for (let day = today.getDay(); day < 6; day++) {
           if (
-              !maintenanceAppointments.some(
-                  (e) =>
-                      e.date.getDate() === addDays(today, day - currentDay).getDate()
-              )
+            !maintenanceAppointments.some(
+              (e) =>
+                e.date.getDate() === addDays(today, day - currentDay).getDate()
+            )
           ) {
             if (day > 0 && day < 6) {
               availableMaintenanceDates.push({
@@ -364,9 +383,10 @@ io.on('connection', (socket) => {
       availableRevisionDates = [];
       for (let day = today.getDay(); day < 6; day++) {
         if (
-            !revisionAppointments.some(
-                (e) => e.date.getDate() === addDays(today, day - currentDay).getDate()
-            )
+          !revisionAppointments.some(
+            (e) =>
+              e.date.getDate() === addDays(today, day - currentDay).getDate()
+          )
         ) {
           if (day > 0 && day < 6) {
             availableRevisionDates.push({
@@ -383,10 +403,10 @@ io.on('connection', (socket) => {
         availableRevisionDates = [];
         for (let day = today.getDay(); day < 6; day++) {
           if (
-              !revisionAppointments.some(
-                  (e) =>
-                      e.date.getDate() === addDays(today, day - currentDay).getDate()
-              )
+            !revisionAppointments.some(
+              (e) =>
+                e.date.getDate() === addDays(today, day - currentDay).getDate()
+            )
           ) {
             if (day > 0 && day < 6) {
               availableRevisionDates.push({
@@ -408,9 +428,10 @@ io.on('connection', (socket) => {
       availableRoadDates = [];
       for (let day = today.getDay(); day < 6; day++) {
         if (
-            !roadAppointments.some(
-                (e) => e.date.getDate() === addDays(today, day - currentDay).getDate()
-            )
+          !roadAppointments.some(
+            (e) =>
+              e.date.getDate() === addDays(today, day - currentDay).getDate()
+          )
         ) {
           if (day > 0 && day < 6) {
             availableRoadDates.push({
@@ -427,10 +448,10 @@ io.on('connection', (socket) => {
         availableRoadDates = [];
         for (let day = today.getDay(); day < 6; day++) {
           if (
-              !roadAppointments.some(
-                  (e) =>
-                      e.date.getDate() === addDays(today, day - currentDay).getDate()
-              )
+            !roadAppointments.some(
+              (e) =>
+                e.date.getDate() === addDays(today, day - currentDay).getDate()
+            )
           ) {
             if (day > 0 && day < 6) {
               availableRoadDates.push({
@@ -452,9 +473,10 @@ io.on('connection', (socket) => {
       availableOffroadDates = [];
       for (let day = today.getDay(); day < 6; day++) {
         if (
-            !offroadAppointments.some(
-                (e) => e.date.getDate() === addDays(today, day - currentDay).getDate()
-            )
+          !offroadAppointments.some(
+            (e) =>
+              e.date.getDate() === addDays(today, day - currentDay).getDate()
+          )
         ) {
           if (day > 0 && day < 6) {
             availableOffroadDates.push({
@@ -471,10 +493,10 @@ io.on('connection', (socket) => {
         availableOffroadDates = [];
         for (let day = today.getDay(); day < 6; day++) {
           if (
-              !offroadAppointments.some(
-                  (e) =>
-                      e.date.getDate() === addDays(today, day - currentDay).getDate()
-              )
+            !offroadAppointments.some(
+              (e) =>
+                e.date.getDate() === addDays(today, day - currentDay).getDate()
+            )
           ) {
             if (day > 0 && day < 6) {
               availableOffroadDates.push({
@@ -496,9 +518,10 @@ io.on('connection', (socket) => {
       availableSportDates = [];
       for (let day = today.getDay(); day < 6; day++) {
         if (
-            !sportAppointments.some(
-                (e) => e.date.getDate() === addDays(today, day - currentDay).getDate()
-            )
+          !sportAppointments.some(
+            (e) =>
+              e.date.getDate() === addDays(today, day - currentDay).getDate()
+          )
         ) {
           if (day > 0 && day < 6) {
             availableSportDates.push({
@@ -515,10 +538,10 @@ io.on('connection', (socket) => {
         availableSportDates = [];
         for (let day = today.getDay(); day < 6; day++) {
           if (
-              !sportAppointments.some(
-                  (e) =>
-                      e.date.getDate() === addDays(today, day - currentDay).getDate()
-              )
+            !sportAppointments.some(
+              (e) =>
+                e.date.getDate() === addDays(today, day - currentDay).getDate()
+            )
           ) {
             if (day > 0 && day < 6) {
               availableSportDates.push({
@@ -585,7 +608,7 @@ io.on('connection', (socket) => {
         lastMaintenanceDate: res,
       };
       let yearDiff = Math.abs(
-          new Date(vehiculeInfo.lastMaintenanceDate).getFullYear() -
+        new Date(vehiculeInfo.lastMaintenanceDate).getFullYear() -
           new Date().getFullYear()
       );
       if (yearDiff > 1) {
@@ -606,10 +629,14 @@ io.on('connection', (socket) => {
 
     socket.on("send_maintenance_appointment_date", (res) => {
       if (availableMaintenanceDates.some((e) => e.id === res)) {
-        maintenanceAppointments.push({
-          id: nextMaintenanceId,
-          date: availableMaintenanceDates.find((e) => e.id === res).date,
-        });
+        // maintenanceAppointments.push({
+        //   id: nextMaintenanceId,
+        //   date: availableMaintenanceDates.find((e) => e.id === res).date,
+        // });
+        let res = saveNewMaintenanceAppointment(
+          nextMaintenanceId,
+          availableMaintenanceDates.find((e) => e.id === res).date
+        );
         nextMaintenanceId += 1;
         socket.emit("maintenance_appointment_added", {
           from: "server",
@@ -709,7 +736,7 @@ io.on('connection', (socket) => {
     });
 
     socket.on("send_offroad_appointment_date", (res) => {
-      console.log(res)
+      console.log(res);
       if (availableOffroadDates.some((e) => e.id === res)) {
         offroadAppointments.push({
           id: nextOffroadAppointmentId,
@@ -755,7 +782,6 @@ io.on('connection', (socket) => {
   });
 
   // end chat Bot
-
 });
 
 // ioChatbot.on('connection', (socket) => {})
@@ -770,10 +796,8 @@ io.on('connection', (socket) => {
 //   cookie: true
 // });
 
-
 // app.use(express.json());
 // app.use(coolieParser);
-
 
 // set static folder
 //
@@ -791,6 +815,3 @@ io.on('connection', (socket) => {
 //   console.log("Anonymous client connected");
 //
 // });
-
-
-
