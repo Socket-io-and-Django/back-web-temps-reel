@@ -109,10 +109,12 @@ const contact = {
 //   //   date: new Date("December 16, 2022 13:00:00"),
 //   // },
 // ];
-const maintenanceAppointments = getAllMaintenanceAppointments();
+const maintenanceAppointments = getAllMaintenanceAppointments().then((v) => {
+  console.log("ici");
+  console.log("maintenanceAppointments : " + v);
+});
 let nextMaintenanceId = getLastMaintenanceAppointmentId();
 
-console.log(maintenanceAppointments);
 
 let nextRevisionId = 3;
 const revisionAppointments = [
