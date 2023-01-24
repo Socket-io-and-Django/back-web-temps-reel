@@ -1,65 +1,27 @@
 <script setup>
-// @ is an alias to /src
-// import RegisterForm from "@/components/Register-form-app.vue";
-// import LogInApp from "@/components/LogIn-app.vue";
 import ButtonApp from "@/components/Button-app.vue";
 import {defineProps, ref} from "vue";
 import  { io } from "socket.io-client";
-import SendMessageApp from "@/components/Send-message-app.vue";
-import MessagesAreaApp from "@/components/Messages-area-app.vue";
-import ConsultantsAreaApp from "@/components/Consultants-area-app.vue";
-import ClientsAreaApp from "@/components/Clients-area-app.vue";
-import ChatBot from "@/components/ChatBot.vue";
+import ClientChatAreaApp from "@/components/Client-chat-area-app.vue";
+import ConsultantChatAreaApp from "@/components/Consultant-chat-area-app.vue";
 
-
-const messages = ref([]);
-const connected = ref(false);
-const askToJoin = ref(false);
-// const registered = ref(true);
-const availableConsultants = ref([]);
-const waitingList = ref([]);
-const userRoles = [];
 const props = defineProps({
+  username: String,
   token: String,
 });
-const busy = ref(false);
-const chatBot = ref(false);
-
-function startEndChatBot() {
-  chatBot.value = !chatBot.value;
-}
-function sendMessage(message) {
-  socket.value.emit('chatMessage', message.text);
-}
-function askToChat(id) {
-  socket.value.emit('askToChat', id);
-  askToJoin.value=true;
-  busy.value = true;
-  messages.value.splice(1, messages.value.length -1);
-}
 
 
-function acceptToChat(id) {
-  socket.value.emit('acceptToChat', id);
-  busy.value = true;
-  messages.value.splice(1, messages.value.length -1);
+const connected = ref(false);
+const isCon = ref(false);
+const userRoles = [];
 
-}
-function leaveChat(){
-  socket.value.emit('leaveChat');
-  busy.value = false;
-  askToJoin.value=false;
-  messages.value.splice(1, messages.value.length -1);
-}
 const socket = ref({});
 function connectToSocket(token) {
-
   socket.value = io("ws://localhost:3000", {
     auth: {
       token: token
     }
   });
-
   socket.value.on("connect_error",(er) => {
     console.error("Oops! Authentication failed:", er.message, " , ", er.cause)
   })
@@ -70,27 +32,13 @@ function connectToSocket(token) {
     if(roles.length !== 0){
       roles.forEach(role => {
         userRoles.push(role);
+        if(role === 4242){
+          console.log("con")
+          isCon.value = true
+        }
       })
     }
-    console.log("roles: ", userRoles)
-  })
-  socket.value.on('availableConsultants', (available) => {
-    // console.log("availableConsultants  :", available)
-    availableConsultants.value = available
-    // console.log("availableConsultants", availableConsultants.value)
-  })
-  // message from server
-  socket.value.on('message', (message) => {
-    messages.value.push(message);
-  })
-
-  socket.value.on('waitingList', (clientsWaitingList) => {
-
-      if(clientsWaitingList) {
-        waitingList.value = clientsWaitingList
-          // console.log('waitingList client: ', waitingList.value)
-
-    }
+    console.log("userRoles: ", userRoles)
   })
 }
 </script>
@@ -104,49 +52,22 @@ function connectToSocket(token) {
           v-bind:color="'gray'"
       />
     <div class="chat-area" v-else>
-      <div class="chat" v-if="!chatBot">
-        <div>
-          <MessagesAreaApp
-              v-bind:messages="messages" />
-          <SendMessageApp
-              v-on:send-new-message="sendMessage"
-              v-bind:messagesNumber="messages.length"
-          />
+      <ConsultantChatAreaApp v-if="isCon === true"
+                             :userRoles="userRoles"
+                             :token="props.token"
+                             :connected="connected"
+                             :socket="socket"
+                             :username="props.username"
+                             />
 
-        </div>
-          <ConsultantsAreaApp
-              v-if="!askToJoin && !userRoles.includes(4242)"
-              v-show="availableConsultants.length !== 0"
-              v-bind:consultants="availableConsultants"
-              v-on:ask-to-chat="askToChat"
-          />
-          <ClientsAreaApp
-              v-if="userRoles.includes(4242)"
-              v-show="waitingList.length !== 0 "
-              v-bind:clients="waitingList"
-              v-on:accept-to-chat="acceptToChat"
-          />
-        <ButtonApp
-            v-if="!userRoles.includes(4242) && !busy"
-            :text="'Chat Bot'"
-            :color="'blue'"
-            @btn-click="startEndChatBot"
-        />
-        <ButtonApp
-            v-if="busy"
-            :text="'Leave Chat'"
-            :color="'red'"
-            @btn-click="leaveChat"
-        />
-      </div>
+      <ClientChatAreaApp v-else
+          :userRoles="userRoles"
+          :token="props.token"
+          :connected="connected"
+          :socket="socket"
+          :username="props.username"
+      />
 
-      <div class="chat-bot-area" v-else>
-        <chat-bot
-            :socket="socket"
-            :token="props.token"
-            @close-chat-bot="startEndChatBot"
-        />
-      </div>
     </div>
   </div>
 

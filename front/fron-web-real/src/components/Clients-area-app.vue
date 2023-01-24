@@ -5,7 +5,7 @@ import {defineEmits, defineProps} from "vue";
 const props = defineProps({
   clients: Array
 })
-const emit = defineEmits(['accept-to-chat']);
+const emit = defineEmits(['accept-to-chat', 'refuse-to-chat']);
 
 </script>
 
@@ -16,6 +16,7 @@ const emit = defineEmits(['accept-to-chat']);
         <client-app
             v-bind:client="client"
             v-on:accept-to-chat="emit('accept-to-chat', client.id)"
+            v-on:refuse-to-chat="emit('refuse-to-chat', client.id)"
         />
     </div>
 

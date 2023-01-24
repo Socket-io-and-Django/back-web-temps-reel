@@ -7,12 +7,12 @@ const routes = [
     path: '/',
     name: 'home',
     component: AuthApp,
-    props: true
+    props: (route) => ({ query: route.query.token })
   },
   // {
-  //   path: '/chat',
+  //   path: '/user/chat',
   //   name: 'chat',
-  //   component: ChatApp
+  //   component: UserChatAreaApp
   // },
   {
     path: '/about',

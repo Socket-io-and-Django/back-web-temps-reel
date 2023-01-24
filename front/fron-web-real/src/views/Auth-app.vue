@@ -1,5 +1,5 @@
 <script setup>
-import { defineProps } from "vue";
+import { defineProps, defineEmits } from "vue";
 import IdentifyApp from "@/components/Identify-app.vue";
 import ChatAreaApp from "@/components/Chat-area-app.vue";
 
@@ -8,11 +8,13 @@ const props = defineProps(
   token: Object,
   username: Object
     });
-// const emit = defineEmits(['user-logged-in']);
+const emit = defineEmits(['user-logged-in']);
 function userLoggedIn(token) {
+  // eslint-disable-next-line vue/no-mutating-props
   props.token.value = token.accessToken;
+  // eslint-disable-next-line vue/no-mutating-props
   props.username.value = token.username;
-  // emit('user-logged-in', token);
+  emit('user-logged-in', token);
 }
 
 
@@ -21,8 +23,9 @@ function userLoggedIn(token) {
 
 <template>
   <div class="app-area">
-    <chat-area-app v-if="props.token.value !== '' "
+    <ChatAreaApp v-if="props.token.value !== '' "
                    :token="props.token.value"
+                   :username="props.username.value"
     />
 
     <IdentifyApp v-else

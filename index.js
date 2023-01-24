@@ -8,8 +8,6 @@ const cors = require('cors');
 
 // const coolieParser = require('cookie-parser');
 const path = require('path');
-// const formatMessage = require('./utils/messages')
-// const {userJoin, getCurrentUser, userLeave, getRoomUsers} = require('./utils/users');
 
 // middlewares
 const jwtSocketHandler = require('./middleware/jwtSocketHandler');
@@ -223,7 +221,6 @@ io.on('connection', (socket) => {
   // socket.join(user.room)
   socket.emit('waitingList',  getWaitingList(user.id));
 
-
   socket.on('askToChat', (id) => {
     io.to(id).emit('message', formatMessage(user.username, 'askToChat'));
     addToWaitingList(id, user);
@@ -244,6 +241,18 @@ io.on('connection', (socket) => {
     io.emit('availableConsultants', getConsultants());
     socket.join(user.room);
     socket.to(room).emit('message', formatMessage(BotName, `${user.username} has accept your request`));
+  });
+
+  socket.on('refuseToChat', (id) => {
+    console.log("in refuse")
+    const client = getCurrentUser(id);
+    leaveWaitingList(id, user);
+    socket.emit("waitingList", getWaitingList(id))
+    io.to(id).socketsLeave(client.room);
+    client.room = "Public Room";
+    io.to(id).socketsJoin(client.room);
+    socket.to(client.id).emit('refuseToChat', formatMessage(BotName, `${user.username} has refuse your request`));
+    // socket.to(client.id).emit('message', formatMessage(BotName, `${user.username} has refuse your request`));
   });
 
   socket.on('leaveChat', () => {

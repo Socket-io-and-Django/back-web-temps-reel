@@ -3,7 +3,7 @@
 import {defineEmits, defineProps} from "vue";
 import ButtonApp from "@/components/Button-app.vue";
 
-const emit = defineEmits(['accept-to-chat']);
+const emit = defineEmits(['accept-to-chat', 'refuse-to-chat']);
 
 const props = defineProps({
   client: Object
@@ -19,6 +19,10 @@ const props = defineProps({
   <button-app
       :text="'accept Chat'"
       v-on:btn-click="emit('accept-to-chat', props.client.id)"
+  />
+  <button-app
+      :text="'refuse Chat'"
+      v-on:btn-click="emit('refuse-to-chat', props.client.id)"
   />
 </template>
 

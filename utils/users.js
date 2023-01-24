@@ -71,9 +71,12 @@ function addToWaitingList(id, user){
 }
 
 function leaveWaitingList(id, user){
-    const index = user.waitingList.findIndex(client => client.id === id);
-    if(index !== -1) {
-        return user.waitingList.splice(index, 1)[0];
+
+    if(user && user.hasOwnProperty('waitingList')){
+        const index = user.waitingList.findIndex(client => client.id === id);
+        if(index !== -1) {
+            return user.waitingList.splice(index, 1)[0];
+        }
     }
 }
 

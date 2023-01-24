@@ -1,13 +1,9 @@
-
-
 <script setup>
 import RegisterForm from "@/components/Register-form-app.vue";
 import LogInApp from "@/components/LogIn-app.vue";
 import ButtonApp from "@/components/Button-app.vue";
 import { useRoute } from 'vue-router';
-
-import { computed, ref, defineEmits, defineProps } from "vue";
-
+import { computed, ref, defineProps, defineEmits } from "vue";
 
 const BACK_URL = 'http://localhost:9000';
 
@@ -18,6 +14,7 @@ const token = {
   accessToken: ref(""),
   username: ref("")
 };
+
 
 const emit = defineEmits(['user-logged-in']);
 
@@ -71,12 +68,11 @@ async function logInUser(user) {
   })
   const data = await res.json();
 
-  // if('accessToken' in data) props.token.accessToken = data.accessToken;
   if('accessToken' in data) {
     token.accessToken = data.accessToken;
     token.username = user.username;
+    console.log("user: ", user)
     emit('user-logged-in', token);
-
   }
 }
 
