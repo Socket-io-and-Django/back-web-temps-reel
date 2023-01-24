@@ -1,7 +1,21 @@
 const {rolesList} = require('../config/rolesList');
+const formatMessage = require("./messages");
 const onlineUsersList = [];
-const onlineConsultantList = [];
-const waitingList = [];
+
+function consultantNotAvailable(io, socket, consultant) {
+    if(consultant && consultant.hasOwnProperty('waitingList')){
+        console.log("cons w l: ", consultant.waitingList)
+        consultant.waitingList.forEach(client => {
+            io.to(client.id).socketsLeave(client.room);
+            client.room = "Public Room";
+            io.to(client.id).socketsJoin(client.room);
+            socket.to(client.id).emit('consultantRefuseToChat', formatMessage('', `${consultant.username} is no more available`));
+
+        })
+        consultant.waitingList = []
+    }
+    socket.emit("waitingList", getWaitingList(consultant.id))
+}
 
 
 function isConsultant(roles) {
@@ -71,7 +85,6 @@ function addToWaitingList(id, user){
 }
 
 function leaveWaitingList(id, user){
-
     if(user && user.hasOwnProperty('waitingList')){
         const index = user.waitingList.findIndex(client => client.id === id);
         if(index !== -1) {
@@ -90,5 +103,6 @@ module.exports= {
     addToWaitingList,
     getWaitingList,
     isConsultant,
-    leaveWaitingList
+    leaveWaitingList,
+    consultantNotAvailable
 }

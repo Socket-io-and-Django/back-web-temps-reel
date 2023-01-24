@@ -17,7 +17,6 @@ onMounted(() => {
   chating();
 });
 const messages = ref([]);
-const askToJoin = ref(false);
 const waitingList = ref([]);
 const busy = ref(false);
 
@@ -39,27 +38,53 @@ function refuseToChat(id) {
 function leaveChat(){
   props.socket.emit('leaveChat');
   busy.value = false;
-  askToJoin.value=false;
   messages.value.splice(1, messages.value.length -1);
 }
 
+function availability(){
+    console.log("avail: ", busy.value)
+    props.socket.emit('availability', busy.value);
+    busy.value = !busy.value;
+}
+
+
 function chating() {
+
+  // isAvailable
+  props.socket.on('isAvailable', (isAvailable) => {
+    busy.value = !isAvailable;
+    console.log('isAvailable: ', busy.value)
+  });
 
   // message from server
   props.socket.on('message', (message) => {
     messages.value.push(message);
-  })
+  });
   props.socket.on('waitingList', (clientsWaitingList) => {
       if(clientsWaitingList) {
         waitingList.value = clientsWaitingList
           // console.log('waitingList client: ', waitingList.value)
         }
   })
+
 }
 </script>
 
 <template>
-
+    <div v-if="busy">
+      <ButtonApp
+          :text="'Available'"
+          :color="'green'"
+          @btn-click="availability"
+      />
+    </div>
+  <div v-else>
+    <ButtonApp
+        :text="'Not Available'"
+        :color="'red'"
+        @btn-click="availability"
+    />
+  </div>
     <div class="chat" >
         <div>
           <MessagesAreaApp

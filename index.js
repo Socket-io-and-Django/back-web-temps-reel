@@ -37,7 +37,7 @@ const {
   getOnlineUsers,
   addToWaitingList,
   getWaitingList,
-  leaveWaitingList, isConsultant
+  leaveWaitingList, isConsultant, consultantNotAvailable
 } = require('./utils/users');
 const formatMessage = require('./utils/messages');
 
@@ -244,15 +244,13 @@ io.on('connection', (socket) => {
   });
 
   socket.on('refuseToChat', (id) => {
-    console.log("in refuse")
     const client = getCurrentUser(id);
     leaveWaitingList(id, user);
     socket.emit("waitingList", getWaitingList(id))
     io.to(id).socketsLeave(client.room);
     client.room = "Public Room";
     io.to(id).socketsJoin(client.room);
-    socket.to(client.id).emit('refuseToChat', formatMessage(BotName, `${user.username} has refuse your request`));
-    // socket.to(client.id).emit('message', formatMessage(BotName, `${user.username} has refuse your request`));
+    socket.to(client.id).emit('consultantRefuseToChat', formatMessage(BotName, `${user.username} has refuse your request`));
   });
 
   socket.on('leaveChat', () => {
@@ -270,38 +268,56 @@ io.on('connection', (socket) => {
     socket.join(user.room);
     io.to(id).emit("waitingList", getWaitingList(id))
   });
-    // broadcast when a user connect
-    // socket.to(id).emit('message', formatMessage(BotName,`${user.username} has join the chat`));
 
-    // send users and room info
-    io.to(user.room).emit('roomUsers', {
-      users: getRoomUsers(user.room)
-    });
-
-    // listen for chatMessage
-    socket.on('chatMessage', (message) => {
-      const user = getCurrentUser(socket.id);
-      io.to(user.room).emit('message', formatMessage( user.username ,message));
-    });
-
-    // when user leaving room
-    socket.on("leavingRoom", () => {
-    socket.leave(user.room);
-    socket.to(user.room).emit("chatMessage", `${user.username} has left the room`);
-    user.room = user.id;
+  // send users and room info
+  io.to(user.room).emit('roomUsers', {
+    users: getRoomUsers(user.room)
   });
 
-    // when a user disconnect
-    socket.on("disconnect", () => {
-      console.log("user disconnected");
-      if(user.isAvailable){
-        user.isAvailable = false;
-        io.emit('availableConsultants', getConsultants());
+  // listen for chatMessage
+  socket.on('chatMessage', (message) => {
+    const user = getCurrentUser(socket.id);
+    io.to(user.room).emit('message', formatMessage( user.username ,message));
+  });
+
+    // when user leaving room
+  socket.on("leavingRoom", () => {
+  socket.leave(user.room);
+  socket.to(user.room).emit("chatMessage", `${user.username} has left the room`);
+  user.room = user.id;
+  });
+
+  // Consultant availability
+  socket.on("availability", (isAvailable) => {
+    if(user && user.hasOwnProperty('isAvailable')) {
+      user.isAvailable = isAvailable;
+      console.log("available: ", user.isAvailable)
+      if(isAvailable === false) {
+        consultantNotAvailable(io, socket, user);
       }
-      socket.leave(user.room);
-      user.room = user.id;
-      socket.broadcast.emit("chatMessage", "A user has been disconnected");
-    });
+      io.emit('availableConsultants', getConsultants());
+    }
+  });
+
+  socket.on("getAvailable", () => {
+    if(user.hasOwnProperty('isAvailable')){
+      socket.emit('isAvailable', user.isAvailable )
+    }
+  });
+
+
+
+  // when a user disconnect
+  socket.on("disconnect", () => {
+    console.log("user disconnected");
+    if(user.isAvailable){
+      user.isAvailable = false;
+      io.emit('availableConsultants', getConsultants());
+    }
+    socket.leave(user.room);
+    user.room = user.id;
+    socket.broadcast.emit("chatMessage", "A user has been disconnected");
+  });
 
   socket.on('joinRoom', (room) => {
   });

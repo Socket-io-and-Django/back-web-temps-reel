@@ -51,7 +51,7 @@ function chating() {
   props.socket.on('message', (message) => {
     messages.value.push(message);
   })
-  props.socket.on('refuseToChat', (message) => {
+  props.socket.on('consultantRefuseToChat', (message) => {
     console.log("in refuse")
     busy.value = false;
     askToJoin.value=false;

@@ -12,7 +12,7 @@ const props = defineProps({
 
 
 const connected = ref(false);
-const isCon = ref(false);
+const isConsultant = ref(false);
 const userRoles = [];
 
 const socket = ref({});
@@ -34,7 +34,7 @@ function connectToSocket(token) {
         userRoles.push(role);
         if(role === 4242){
           console.log("con")
-          isCon.value = true
+          isConsultant.value = true
         }
       })
     }
@@ -52,7 +52,7 @@ function connectToSocket(token) {
           v-bind:color="'gray'"
       />
     <div class="chat-area" v-else>
-      <ConsultantChatAreaApp v-if="isCon === true"
+      <ConsultantChatAreaApp v-if="isConsultant === true"
                              :userRoles="userRoles"
                              :token="props.token"
                              :connected="connected"
