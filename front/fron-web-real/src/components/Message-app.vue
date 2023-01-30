@@ -13,7 +13,7 @@ const props = defineProps({
       {{props.message.username}}
     </div>
     <div id="time">
-        {{props.message.time}}
+        {{props.message.creationDatetime}}
     </div>
     <div id="text">
       {{props.message.text}}
