@@ -24,7 +24,7 @@ function isConsultant(roles) {
 // join user to chat
 function getConsultants() {
     const available =  onlineUsersList.filter(user => isConsultant(user.roles) === true && user.isAvailable);
-    console.log("avail: ", available);
+    // console.log("avail: ", available);
     return available;
 }
 function userJoin(id, username, roles, room) {
@@ -39,8 +39,12 @@ function userJoin(id, username, roles, room) {
 }
 
 // get current user
-function getCurrentUser(id) {
+function getUser(id) {
     return onlineUsersList.find(user => user.id === id);
+}
+
+function getUserByName(username) {
+    return onlineUsersList.find(user => user.username === username);
 }
 
 // user leave chat
@@ -71,17 +75,28 @@ function getWaitingList(id){
     //     waitingList.push(client);
     // });
     // return waitingList;
-    const consultant = getCurrentUser(id);
+    const consultant = getUser(id);
     if (isConsultant(consultant.roles)){
         return consultant.waitingList;
     }
     return []
 }
 function addToWaitingList(id, user){
-    const consultant = getCurrentUser(id);
+    const consultant = getUser(id);
     if (isConsultant(consultant.roles)){
         consultant.waitingList.push(user);
     }
+}
+
+function logoutOnlineUsersList(id){
+    console.log("logout s ", id, " ", onlineUsersList)
+    if(id){
+        const index = onlineUsersList.findIndex(user => user.id === id);
+        if(index !== -1) {
+            const result =  onlineUsersList.splice(index, 1)[0];
+        }
+    }
+    console.log("logout e ", id, " ", onlineUsersList)
 }
 
 function leaveWaitingList(id, user){
@@ -95,14 +110,17 @@ function leaveWaitingList(id, user){
 
 module.exports= {
     userJoin,
-    getCurrentUser,
+    getUser,
     userLeave,
     getRoomUsers,
     getConsultants,
+    getUserByName,
     getOnlineUsers,
     addToWaitingList,
     getWaitingList,
     isConsultant,
     leaveWaitingList,
-    consultantNotAvailable
+    consultantNotAvailable,
+    logoutOnlineUsersList,
+    onlineUsersList
 }

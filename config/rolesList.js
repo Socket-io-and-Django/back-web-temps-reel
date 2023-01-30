@@ -6,6 +6,7 @@ const rolesList = {
 function getRole(role) {
     return Object.keys(rolesList).find(key => rolesList[key] === role);
 }
+
 function getValue(role) {
     return rolesList[role];
 }

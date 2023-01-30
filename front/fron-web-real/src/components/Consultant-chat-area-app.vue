@@ -42,7 +42,7 @@ function leaveChat(){
 }
 
 function availability(){
-    console.log("avail: ", busy.value)
+    // console.log("avail: ", busy.value)
     props.socket.emit('availability', busy.value);
     busy.value = !busy.value;
 }
@@ -57,8 +57,10 @@ function chating() {
   });
 
   // message from server
-  props.socket.on('message', (message) => {
-    messages.value.push(message);
+  props.socket.on('message', async (messagesList) => {
+    messages.value = await messagesList.reverse();
+    // const m = await messagesList[0];
+    // console.log("message t: ", typeof (m.creationDatetime))
   });
   props.socket.on('waitingList', (clientsWaitingList) => {
       if(clientsWaitingList) {
@@ -87,12 +89,12 @@ function chating() {
   </div>
     <div class="chat" >
         <div>
-          <MessagesAreaApp
-              v-bind:messages="messages" />
           <SendMessageApp
               v-on:send-new-message="sendMessage"
               v-bind:messagesNumber="messages.length"
           />
+          <MessagesAreaApp
+              v-bind:messages="messages" />
 
         </div>
       <div class="chat-area-app">

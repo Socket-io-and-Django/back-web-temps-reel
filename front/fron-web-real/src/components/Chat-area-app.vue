@@ -29,7 +29,7 @@ function connectToSocket(token) {
     connected.value = true;
   })
   socket.value.on("roles", (roles) => {
-    if(roles.length !== 0){
+    if(roles.length !== 0 ){
       roles.forEach(role => {
         userRoles.push(role);
         if(role === 4242){

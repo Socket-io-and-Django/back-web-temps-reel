@@ -26,6 +26,7 @@ const chatBot = ref(false);
 function startEndChatBot() {
   chatBot.value = !chatBot.value;
 }
+
 function sendMessage(message) {
   props.socket.emit('chatMessage', message.text);
 }
@@ -48,14 +49,22 @@ function chating() {
     // console.log("availableConsultants", availableConsultants.value)
   })
   // message from server
-  props.socket.on('message', (message) => {
-    messages.value.push(message);
+  props.socket.on('message', async (messagesList) => {
+    const mess = await messagesList;
+    console.log("messaget: ", mess[0])
+    messages.value = messagesList;
+
   })
-  props.socket.on('consultantRefuseToChat', (message) => {
+
+  props.socket.on('consultantRefuseToChat', (messagesList) => {
     console.log("in refuse")
     busy.value = false;
-    askToJoin.value=false;
-    messages.value.push(message);
+    askToJoin.value = false;
+    messagesList.then(() => {
+          messages.value = messagesList;
+
+        }
+    )
   })
 }
 </script>
