@@ -1,8 +1,10 @@
 version: "3"
 
 services:
+
   node_back:
     image: node:19-alpine3.16
+    container_name: node_back
     depends_on:
       - mongodb
     user: node
@@ -19,6 +21,7 @@ services:
 
   mongodb:
     image: mongo:latest
+    container_name: mongodb
     restart: unless-stopped
     env_file: ./db/.env
 #    environment:
@@ -30,6 +33,7 @@ services:
       - mongodb:/data/db
 
   node_front:
+    container_name: node_front
     depends_on:
       - node_back
     build:

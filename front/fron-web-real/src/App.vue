@@ -63,12 +63,12 @@ function userLoggedIn(token){
   padding: 0 ;
 }
 .container {
-  max-width: 80vmin;
-  margin: 30px auto;
+  max-width: 95vmin;
+  margin: 20px auto;
   overflow: auto;
   min-height: 300px;
   border: 1px solid steelblue;
-  padding: 30px;
+  padding: 20px;
   border-radius: 5px;
 }
 

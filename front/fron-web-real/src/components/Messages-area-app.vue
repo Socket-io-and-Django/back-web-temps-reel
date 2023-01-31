@@ -16,7 +16,7 @@ const props = defineProps({
 <template>
   <div
       class="messages-list">
-    <div v-for="message in props.messages" v-bind:key="message.creationDatetime" >
+    <div v-for="message in props.messages" v-bind:key="message.id" >
       <MessageApp
           v-bind:message="message" />
     </div>

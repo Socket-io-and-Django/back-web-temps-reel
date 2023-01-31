@@ -13,10 +13,13 @@ const props = defineProps({
       {{props.message.username}}
     </div>
     <div id="time">
-        {{props.message.creationDatetime}}
+        {{(new Date(props.message.creationDatetime)).toLocaleTimeString()}}
     </div>
     <div id="text">
       {{props.message.text}}
+    </div>
+    <div id="room">
+      {{props.message.room}}
     </div>
   </div>
 </template>

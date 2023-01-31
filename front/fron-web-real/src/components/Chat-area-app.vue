@@ -13,7 +13,7 @@ const props = defineProps({
 
 const connected = ref(false);
 const isConsultant = ref(false);
-const userRoles = [];
+const userRoles = ref([]);
 
 const socket = ref({});
 function connectToSocket(token) {
@@ -27,19 +27,16 @@ function connectToSocket(token) {
   })
   socket.value.on("connect", () => {
     connected.value = true;
-  })
-  socket.value.on("roles", (roles) => {
-    if(roles.length !== 0 ){
-      roles.forEach(role => {
-        userRoles.push(role);
-        if(role === 4242){
-          console.log("con")
-          isConsultant.value = true
+    socket.value.on("roles", (roles) => {
+      if(roles.length !== 0 ){
+        userRoles.value = roles;
+        if(userRoles.value.includes(4242)) {
+          isConsultant.value = true;
         }
-      })
-    }
-    console.log("userRoles: ", userRoles)
+      }
+    })
   })
+
 }
 </script>
 
@@ -60,7 +57,7 @@ function connectToSocket(token) {
                              :username="props.username"
                              />
 
-      <ClientChatAreaApp v-else
+      <ClientChatAreaApp v-if="isConsultant === false"
           :userRoles="userRoles"
           :token="props.token"
           :connected="connected"

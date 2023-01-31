@@ -2,12 +2,11 @@ const {rolesList} = require('../config/rolesList');
 const formatMessage = require("./messages");
 const onlineUsersList = [];
 
-function consultantNotAvailable(io, socket, consultant) {
+function consultantNotAvailable(io, socket, consultant, PUBLIC_ROOM_ID) {
     if(consultant && consultant.hasOwnProperty('waitingList')){
-        console.log("cons w l: ", consultant.waitingList)
         consultant.waitingList.forEach(client => {
             io.to(client.id).socketsLeave(client.room);
-            client.room = "Public Room";
+            client.room = PUBLIC_ROOM_ID;
             io.to(client.id).socketsJoin(client.room);
             socket.to(client.id).emit('consultantRefuseToChat', formatMessage('', `${consultant.username} is no more available`));
 
@@ -24,7 +23,6 @@ function isConsultant(roles) {
 // join user to chat
 function getConsultants() {
     const available =  onlineUsersList.filter(user => isConsultant(user.roles) === true && user.isAvailable);
-    // console.log("avail: ", available);
     return available;
 }
 function userJoin(id, username, roles, room) {
@@ -38,7 +36,7 @@ function userJoin(id, username, roles, room) {
     return user;
 }
 
-// get current user
+// get user from id
 function getUser(id) {
     return onlineUsersList.find(user => user.id === id);
 }
@@ -70,11 +68,6 @@ function getOnlineUsers() {
 }
 
 function getWaitingList(id){
-    // const waitingList = [];
-    // getCurrentUser(id).waitingList.forEach(client => {
-    //     waitingList.push(client);
-    // });
-    // return waitingList;
     const consultant = getUser(id);
     if (isConsultant(consultant.roles)){
         return consultant.waitingList;
@@ -89,14 +82,12 @@ function addToWaitingList(id, user){
 }
 
 function logoutOnlineUsersList(id){
-    console.log("logout s ", id, " ", onlineUsersList)
     if(id){
         const index = onlineUsersList.findIndex(user => user.id === id);
         if(index !== -1) {
             const result =  onlineUsersList.splice(index, 1)[0];
         }
     }
-    console.log("logout e ", id, " ", onlineUsersList)
 }
 
 function leaveWaitingList(id, user){

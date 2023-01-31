@@ -5,6 +5,7 @@ import SendMessageApp from "@/components/Send-message-app.vue";
 import MessagesAreaApp from "@/components/Messages-area-app.vue";
 import ChatBot from "@/components/ChatBot.vue";
 import ConsultantsAreaApp from "@/components/Consultants-area-app.vue";
+import ClientRoomAreaApp from "@/components/Client-room-area-app.vue";
 
 const messages = ref([]);
 const askToJoin = ref(false);
@@ -18,13 +19,21 @@ const props = defineProps({
 });
 
 onMounted(() => {
-  chating();
+    chating();
 });
 
 const busy = ref(false);
 const chatBot = ref(false);
+const roomsList = ref([]);
+
 function startEndChatBot() {
   chatBot.value = !chatBot.value;
+}
+
+function joinRoom(room_id){
+  console.log('newRoomId client chat room area', room_id);
+
+  props.socket.emit('joinRoom', room_id);
 }
 
 function sendMessage(message) {
@@ -44,16 +53,11 @@ function leaveChat(){
 }
 function chating() {
   props.socket.on('availableConsultants', (available) => {
-    // console.log("availableConsultants  :", available)
     availableConsultants.value = available
-    // console.log("availableConsultants", availableConsultants.value)
   })
   // message from server
-  props.socket.on('message', async (messagesList) => {
-    const mess = await messagesList;
-    console.log("messaget: ", mess[0])
-    messages.value = messagesList;
-
+  props.socket.on('messages', (messagesList) => {
+    messages.value =  messagesList;
   })
 
   props.socket.on('consultantRefuseToChat', (messagesList) => {
@@ -66,19 +70,35 @@ function chating() {
         }
     )
   })
+  props.socket.on('roomsList', (rooms) => {
+    if(rooms) {
+      roomsList.value = rooms;
+    }
+  })
 }
 </script>
 
 <template>
-    <div class="chat-area" >
+  <ButtonApp
+      v-if="!busy"
+      :text="'Chat Bot'"
+      :color="'blue'"
+      @btn-click="startEndChatBot"
+  />
+  <ButtonApp
+      v-if="busy"
+      :text="'Leave Chat'"
+      :color="'red'"
+      @btn-click="leaveChat"
+  />
+    <div class="client-console" >
       <div class="chat" v-if="!chatBot">
         <div>
-          <MessagesAreaApp
-              v-bind:messages="messages" />
           <SendMessageApp
               v-on:send-new-message="sendMessage"
-              v-bind:messagesNumber="messages.length"
           />
+          <MessagesAreaApp
+              v-bind:messages="messages" />
 
         </div>
           <ConsultantsAreaApp
@@ -87,17 +107,10 @@ function chating() {
               v-bind:consultants="availableConsultants"
               v-on:ask-to-chat="askToChat"
           />
-        <ButtonApp
-            v-if="!busy"
-            :text="'Chat Bot'"
-            :color="'blue'"
-            @btn-click="startEndChatBot"
-        />
-        <ButtonApp
-            v-if="busy"
-            :text="'Leave Chat'"
-            :color="'red'"
-            @btn-click="leaveChat"
+
+        <ClientRoomAreaApp
+            v-on:join-room="joinRoom"
+            v-bind:rooms="roomsList"
         />
       </div>
 
@@ -132,6 +145,13 @@ function chating() {
 
   display: grid;
   grid-template-columns: 5fr 3fr 1fr;
+  height: 60vmin;
+}
+.client-console {
+  /*border: 0.5vmin solid green;*/
+
+  display: grid;
+  grid-template-columns:  auto auto 1fr 1fr;
   height: 60vmin;
 }
 .chat-area:first-child {

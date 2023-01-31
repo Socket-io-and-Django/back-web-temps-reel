@@ -29,24 +29,24 @@ const mongodb = require('./db/mongo');
 
 // utils
 const {
-  userJoin,
-  getUser,
-  userLeave,
-  getRoomUsers,
-  getConsultants,
-  getOnlineUsers,
-  addToWaitingList,
-  getWaitingList,
-  leaveWaitingList, isConsultant, consultantNotAvailable, getUserByName, onlineUsersList, logoutOnlineUsersList
+  userJoin, getUser, userLeave, getRoomUsers, getConsultants,
+  getOnlineUsers, addToWaitingList, getWaitingList, leaveWaitingList,
+  isConsultant, consultantNotAvailable, getUserByName, onlineUsersList, logoutOnlineUsersList
 } = require('./utils/users');
-const {welcomeMessage, askToChatMessage, acceptToChatMessage, consultantRefuseToChaMessage,
+
+const {
+  welcomeMessage, askToChatMessage, acceptToChatMessage, consultantRefuseToChaMessage,
   leaveChatMessage, chatMessage, leavingRoomMessage
 }= require('./utils/messages');
-const {createRoom, getRoom, getRoomChatMessages, setRoomCapacity, insertMessage} = require('./utils/rooms');
+
+const {
+  createRoom, getRoom, getRoomChatMessages,
+  setRoomCapacity, insertMessage, getAllRooms, joinRoom, getActiveRooms, modifyRoom
+} = require('./utils/rooms');
 
 
 // Constants
-const BotName = 'Chat Bot';
+const BOTNAME = 'Chat Bot';
 const PORT = process.env.PORT || 9000;
 const PublicRoom = "Public Room"
 app.use(express.json());
@@ -211,10 +211,14 @@ const sendMessage = (socket, emitType, value) => {
 //
 
 io.on('connection', async (socket) => {
+  // create Public Room if not exist
   const PUBLIC_ROOM_ID = await createRoom("Public Room");
-  console.log("PUBLIC_ROOM", PUBLIC_ROOM_ID);
+  // console.log("PUBLIC_ROOM", PUBLIC_ROOM_ID);
+
   let user = getUserByName(socket.handshake.auth.username);
+  // check if user is already connected
   if(user !== undefined){
+    // if yes get the user socket
     // console.log("sss  ", user)
     const user_socket = io.sockets.sockets.get(user.id);
     if(user_socket){
@@ -224,20 +228,21 @@ io.on('connection', async (socket) => {
   else{
     user = userJoin(socket.id, socket.handshake.auth.username, socket.handshake.auth.roles, PUBLIC_ROOM_ID);
   }
-  console.log("sss  user.room:", user)
   socket.join(user.room);
 
   // socket.on('joinRoom', {room, user})
+
+  //if user is consultant
   if (user.isAvailable) {
     io.emit('availableConsultants', getConsultants());
   }
   socket.emit('roles', user.roles);
   // console.log('user:n ', user)
-  await welcomeMessage(BotName, `Welcome ${user.username}`, user.room, socket);
-
+  welcomeMessage(BOTNAME, `Welcome ${user.username}`, user.room, socket);
   socket.emit('availableConsultants', getConsultants());
   // socket.join(user.room)
   socket.emit('waitingList', getWaitingList(user.id));
+  await getActiveRooms(socket);
 
   // socket.on('askToChat', (id) => {
   //   io.to(id).emit('message', formatMessage(user.username, 'askToChat'));
@@ -249,26 +254,37 @@ io.on('connection', async (socket) => {
   //   socket.join(room);
   // });
   socket.on('askToChat', (id) => {
-    askToChatMessage(id, user.username, 'askToChat', user.room, io);
+    // askToChatMessage(id, user.username, 'askToChat', user.room, io);
     addToWaitingList(id, user);
+    console.log("in askToChat");
     io.to(id).emit("waitingList", getWaitingList(id));
     socket.leave(user.room);
-    const room = `${id}${user.id}`
-    user.room = room;
-    socket.join(room);
+    // const room = `${id}${user.id}`
+    // user.room = room;
+    // socket.join(room);
   });
 
-  socket.on('acceptToChat', (id) => {
+  socket.on('acceptToChat', async (id) => {
     leaveWaitingList(id, user);
-    const room = `${user.id}${id}`
+    const newRoomName = `${user.id}${id}`;
+    const client = getUser(id);
+    const newRoomId = await createRoom(newRoomName, false);
+    console.log("newRoom: ", newRoomId, " newRoomName: ", newRoomName);
+    const client_socket = io.sockets.sockets.get(client.id);
     socket.leave(user.room);
-    user.room = room;
+    client_socket.leave(client.room);
+    client.room = newRoomId;
+    user.room = newRoomId;
     user.isAvailable = false;
-    socket.emit("waitingList", getWaitingList(id))
+    console.log("in acceptToChat");
+    socket.emit("waitingList", getWaitingList(user.id))
     io.emit('availableConsultants', getConsultants());
-    socket.join(user.room);
-    acceptToChatMessage(BotName, `${user.username} has accept your request`, room, socket);
-    // socket.to(room).emit('message', formatMessage(BotName, `${user.username} has accept your request`, room));
+    socket.join(newRoomId);
+    client_socket.join(newRoomId);
+    await acceptToChatMessage(BOTNAME, `${user.username} has accept your request`, newRoomId, client_socket);
+    // console.log("newRoom: ", newRoom);
+
+    // socket.to(room).emit('message', formatMessage(BOTNAME, `${user.username} has accept your request`, room));
   });
 
   socket.on('refuseToChat', (id) => {
@@ -276,28 +292,31 @@ io.on('connection', async (socket) => {
     leaveWaitingList(id, user);
     socket.emit("waitingList", getWaitingList(id))
     io.to(id).socketsLeave(client.room);
-    client.room = "Public Room";
+    client.room = PUBLIC_ROOM_ID;
     io.to(id).socketsJoin(client.room);
-    consultantRefuseToChaMessage(client.id, BotName, `${user.username} has refuse your request`, client.room, socket);
-    // socket.to(client.id).emit('consultantRefuseToChat', formatMessage(BotName, `${user.username} has refuse your request`, client.room));
+    consultantRefuseToChaMessage(client.id, BOTNAME, `${user.username} has refuse your request`, client.room, socket);
+  });
+  socket.on('createRoom', (newRoomName) => {
+    const newRoomId = createRoom(newRoomName);
+    getAllRooms(io);
+    // io.to(user.room).emit('message', formatMessage1(user.username, message, user.room, io));
+  });
+  socket.on('modifyRoom', (roomId, newRoomName, newRoomCapacity) =>{
+    console.log("modifyRoom", roomId, newRoomName, newRoomCapacity)
+
+    modifyRoom(roomId, newRoomName, newRoomCapacity);
   });
 
   socket.on('leaveChat', () => {
-    const id = user.room.replace(user.id, "");
+    // const id = user.room.replace(user.id, "");
     if (isConsultant(user.roles)) {
       user.isAvailable = true;
       io.emit('availableConsultants', getConsultants());
-    } else {
-      leaveWaitingList(user.id, getUser(id));
     }
-    leaveChatMessage(BotName, `${user.username} has left the chat`, user.room, socket);
-    // socket.to(user.room).emit('message', async ()=>{
-    //   formatMessage(BotName, `${user.username} has left the chat`, user.room)
-    // });
+    leaveChatMessage(BOTNAME, `${user.username} has left the chat`, user.room, socket);
     socket.leave(user.room);
-    user.room = PublicRoom;
+    user.room = PUBLIC_ROOM_ID;
     socket.join(user.room);
-    io.to(id).emit("waitingList", getWaitingList(id))
   });
 
   // send users and room info
@@ -307,10 +326,8 @@ io.on('connection', async (socket) => {
 
   // listen for chatMessage
   socket.on('chatMessage', (message) => {
-    console.log("in chatMessage: d", onlineUsersList, socket.id);
     const user = getUser(socket.id);
     if(user){
-      console.log("user in: ", user);
       chatMessage(user.username, message, user.room, io);
     }
     // io.to(user.room).emit('message', formatMessage1(user.username, message, user.room, io));
@@ -318,7 +335,7 @@ io.on('connection', async (socket) => {
   // when user leaving room
   socket.on("leavingRoom", () => {
     socket.leave(user.room);
-    leavingRoomMessage(BotName,`${user.username} has left the room`, user.room, socket)
+    leavingRoomMessage(BOTNAME,`${user.username} has left the room`, user.room, socket)
     user.room = user.id;
   });
 
@@ -328,7 +345,7 @@ io.on('connection', async (socket) => {
       user.isAvailable = isAvailable;
       console.log("available: ", user.isAvailable)
       if (isAvailable === false) {
-        consultantNotAvailable(io, socket, user);
+        consultantNotAvailable(io, socket, user, PUBLIC_ROOM_ID);
       }
       io.emit('availableConsultants', getConsultants());
     }
@@ -350,13 +367,13 @@ io.on('connection', async (socket) => {
     socket.leave(user.room);
     user.room = user.id;
     logoutOnlineUsersList(user.id);
-    
+
     // socket.broadcast.emit("chatMessage", "A user has been disconnected");
   });
 
-  // socket.on('joinRoom', (room) => {
-  //   joinRoom(room, user)
-  // });
+  socket.on('joinRoom', (roomId) => {
+    joinRoom(roomId, user, socket)
+  });
 
   // chat Bot
   socket.on('chatBot', () => {
