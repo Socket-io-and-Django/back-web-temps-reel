@@ -1,7 +1,6 @@
 const MaintenanceAppointment = require("../model/MaintenanceAppointment");
 
-const saveNewMaintenanceAppointment = async (req) => {
-  const { id, date } = req;
+const saveNewMaintenanceAppointment = async (id, date) => {
   try {
     const newAppointment = new MaintenanceAppointment({
       maintenanceId: id,
@@ -15,27 +14,29 @@ const saveNewMaintenanceAppointment = async (req) => {
   }
 };
 
-const getAllMaintenanceAppointments = async () => {
-  const allAppointments = await MaintenanceAppointment.find();
+const getAllMaintenanceAppointments = async (req, res) => {
+  let allAppointments = await MaintenanceAppointment.find();
   // if (!allUser) return res.sendStatus(204);
+  // if (res !== undefined) return res.json(allAppointments);
+  // return [];
   return allAppointments;
 };
 
-const getLastMaintenanceAppointmentId = async () => {
-  const allAppointments = await MaintenanceAppointment.find()
-    .select("-id")
-    .lean()
-    .exec();
-    console.log("hello");
-    console.log(allAppointments);
+const getNextMaintenanceAppointmentId = async () => {
+  const allAppointments = await MaintenanceAppointment.find();
+    // .select("-maintenanceId")
+    // .lean()
+    // .exec();
+  // console.log("hello");
+  // console.log(allAppointments);
   // if (!allUser) return res.sendStatus(204);
   // return res.json(allUser)
   if (allAppointments.length === 0) return 0;
-  return allAppointments[allAppointments.length - 1];
+  return allAppointments[allAppointments.length - 1].maintenanceId + 1;
 };
 
 module.exports = {
   saveNewMaintenanceAppointment,
   getAllMaintenanceAppointments,
-  getLastMaintenanceAppointmentId,
+  getNextMaintenanceAppointmentId,
 };
