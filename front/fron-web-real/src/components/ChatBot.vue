@@ -1,6 +1,5 @@
 <script setup>
-import { io } from 'socket.io-client';
-import {defineEmits, defineProps, onMounted, onUpdated, ref, watch, watchEffect} from 'vue';
+import {defineEmits, defineProps, onMounted, ref, watch} from 'vue';
 const props = defineProps(
     {
       token: String,
@@ -13,20 +12,10 @@ const emit = defineEmits(['close-chat-bot']);
 function closeChatBot () {
   emit('close-chat-bot');
 }
-// const socket = io("ws://localhost:3000"
-//     , {
-//   auth: {
-//     token: props.token
-//   }
-// }
-// )
-// const startChatBot = ref(false);
+
 const socket = props.socket;
-const nickname = ref('')
-const showNickNameForm = ref(true)
 const chatText = ref('')
 const messages = ref([])
-const connectedToChat = ref(false)
 const inputType = ref('text')
 const error = ref('')
 let askedInfoType = ''
@@ -50,10 +39,6 @@ let availableSportDates = []
 const serverTextColor = 'blue'
 const chatContainer = ref(null)
 
-function startChat() {
-  socket.emit('chatBot');
-  // startChatBot.value = true;
-}
 const emitToServer = (emitType, value) => {
     console.log('emit_type', emitType);
     socket.emit(emitType, value)
