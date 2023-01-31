@@ -26,8 +26,7 @@ async function createMessage(username, text, room) {
 //         });
 // }
 function welcomeMessage(username, text, room, socket) {
-    // const message = await createMessage(username, text, room);
-    socket.emit('message', [{
+    socket.emit('messages', [{
         username,
         text,
         creationDatetime: Date.now(),
@@ -36,33 +35,38 @@ function welcomeMessage(username, text, room, socket) {
 }
 async function askToChatMessage(id, username, text, room, io) {
     const message = await createMessage(username, text, room);
-    const messages = await Message.find({room: room}).limit(30).sort({CreationDatetime:-1}).exec();
-    await io.to(id).emit('message', messages);
+    const messages = await Message.find({room: room}).limit(30).sort({creationDatetime:-1}).exec();
+    await io.to(id).emit('messages', messages);
 }
-async function acceptToChatMessage(username, text, room, socket) {
-    const message = await createMessage(username, text, room);
-    await socket.to(room).emit('message', [message]);
+function acceptToChatMessage(username, text, room, socket) {
+    socket.emit('messages', [{
+        username,
+        text,
+        creationDatetime: Date.now(),
+        room
+    }]);
 }
 async function consultantRefuseToChaMessage(client_id, username, text, room, socket) {
     const message = await createMessage(username, text, room);
-    const messages = await Message.find({room: room}).limit(30).sort({CreationDatetime:-1}).exec();
+    const messages = await Message.find({room: room}).limit(30).sort({creationDatetime:-1}).exec();
     await socket.to(client_id).emit('consultantRefuseToChat', messages);
 }
 
 async function leaveChatMessage(username, text, room, socket) {
     const message = await createMessage(username, text, room);
-    const messages = await Message.find({room: room}).limit(30).sort({CreationDatetime:-1}).exec();
-    await socket.to(room).emit('message', messages);
+    const messages = await Message.find({room: room}).limit(30).sort({creationDatetime:-1}).exec();
+    await socket.to(room).emit('messages', messages);
 }
 async function chatMessage(username, text, room, io) {
-    console.log("in chatMessage: ", username, text, room);
+    console.log("join: ", username, text, room);
+
     const message = await createMessage(username, text, room);
-    const messages = await Message.find({room: room}).limit(30).sort({CreationDatetime:-1}).exec();
-    await io.to(room).emit('message', messages);
+    const messages = await Message.find({room: room}).sort({creationDatetime:-1}).limit(30).exec();
+    await io.to(room).emit('messages', messages);
 }
 async function leavingRoomMessage(username, text, room, socket) {
     const message = await createMessage(username, text, room);
-    const messages = await Message.find({room: room}).limit(30).sort({CreationDatetime:-1}).exec();
+    const messages = await Message.find({room: room}).limit(30).sort({creationDatetime:-1}).exec();
     await socket.to(room).emit("chatMessage", messages);
 }
 

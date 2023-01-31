@@ -26,15 +26,18 @@ function onSubmit(e) {
   <div>
     <form v-on:submit="onSubmit" class="send-message">
       <div class="message-control">
-        <label>Message</label>
+        <input type="submit" value="Send Message" class="btn btn-block" />
         <input type="text" name="text" v-model="text" placeholder="Message" />
       </div>
-      <input type="submit" value="Send Message" class="btn btn-block" />
     </form>
   </div>
 </template>
 
 <style scoped>
+.message-control{
+  display: flex;
+  flex-direction: row;
+}
 /**, *::before, *::after {*/
 /*  border: 0.5vmin solid #333333;*/
 /*}*/

@@ -4,6 +4,7 @@ import {defineProps, onMounted, ref} from "vue";
 import SendMessageApp from "@/components/Send-message-app.vue";
 import MessagesAreaApp from "@/components/Messages-area-app.vue";
 import ClientsAreaApp from "@/components/Clients-area-app.vue";
+import RoomAreaApp from "@/components/Room-area-app.vue";
 
 const props = defineProps({
   connected: Boolean,
@@ -18,6 +19,7 @@ onMounted(() => {
 });
 const messages = ref([]);
 const waitingList = ref([]);
+const roomsList = ref([]);
 const busy = ref(false);
 
 function sendMessage(message) {
@@ -42,12 +44,20 @@ function leaveChat(){
 }
 
 function availability(){
-    // console.log("avail: ", busy.value)
     props.socket.emit('availability', busy.value);
     busy.value = !busy.value;
 }
+function joinRoom(room_id){
+  props.socket.emit('joinRoom', room_id);
+}
+function modifyRoom( roomId, newRoomName, newRoomCapacity){
+  console.log("modifyRoom")
+  props.socket.emit('modifyRoom', roomId, newRoomName, newRoomCapacity);
 
-
+}
+function createNewRoom(newRoomName){
+  props.socket.emit('createRoom', newRoomName);
+}
 function chating() {
 
   // isAvailable
@@ -57,63 +67,80 @@ function chating() {
   });
 
   // message from server
-  props.socket.on('message', async (messagesList) => {
-    messages.value = await messagesList.reverse();
+  props.socket.on('messages',  (messagesList) => {
+    messages.value =  messagesList;
     // const m = await messagesList[0];
     // console.log("message t: ", typeof (m.creationDatetime))
   });
   props.socket.on('waitingList', (clientsWaitingList) => {
-      if(clientsWaitingList) {
-        waitingList.value = clientsWaitingList
-          // console.log('waitingList client: ', waitingList.value)
-        }
+    if(clientsWaitingList) {
+      waitingList.value = clientsWaitingList
+      // console.log('waitingList client: ', waitingList.value)
+    }
+  })
+  props.socket.on('roomsList', (rooms) => {
+    if(rooms) {
+      roomsList.value = rooms;
+    }
   })
 
 }
 </script>
 
 <template>
-    <div v-if="busy">
-      <ButtonApp
-          :text="'Available'"
-          :color="'green'"
-          @btn-click="availability"
-      />
-    </div>
-  <div v-else>
-    <ButtonApp
-        :text="'Not Available'"
-        :color="'red'"
-        @btn-click="availability"
-    />
-  </div>
-    <div class="chat" >
-        <div>
-          <SendMessageApp
-              v-on:send-new-message="sendMessage"
-              v-bind:messagesNumber="messages.length"
-          />
-          <MessagesAreaApp
-              v-bind:messages="messages" />
-
-        </div>
-      <div class="chat-area-app">
-          <ClientsAreaApp
-              v-show="waitingList.length !== 0 "
-              v-bind:clients="waitingList"
-              v-on:accept-to-chat="acceptToChat"
-              v-on:refuse-to-chat="refuseToChat"
-          />
-
-      </div>
-
+    <div class="available-btn">
+      <div v-if="busy">
         <ButtonApp
+            :text="'Available'"
+            :color="'green'"
+            @btn-click="availability"
+        />
+      </div>
+      <div v-else>
+        <ButtonApp
+            :text="'Not Available'"
+            :color="'red'"
+            @btn-click="availability"
+        />
+      </div>
+    </div>
+  <div class="console">
+
+    <div class="chat" >
+      <div>
+        <SendMessageApp
+            v-on:send-new-message="sendMessage"
+        />
+        <MessagesAreaApp
+            v-bind:messages="messages"
+        />
+      </div>
+      <ButtonApp
             v-if="busy"
             :text="'Leave Chat'"
             :color="'red'"
             @btn-click="leaveChat"
+      />
+    </div>
+    <div class="waiting-list">
+      <ClientsAreaApp
+          v-show="waitingList.length !== 0 "
+          v-bind:clients="waitingList"
+          v-on:accept-to-chat="acceptToChat"
+          v-on:refuse-to-chat="refuseToChat"
+      />
+    </div>
+    <div class="room-area-app">
+        <RoomAreaApp
+            v-bind:rooms="roomsList"
+            v-bind:is-consultant="true"
+            v-on:create-new-room="createNewRoom"
+            v-on:join-room="joinRoom"
+            v-on:modify-room="modifyRoom"
         />
-      </div>
+    </div>
+  </div>
+
 </template>
 
 <style scoped>
@@ -134,7 +161,14 @@ function chating() {
   /*border: 0.5vmin solid green;*/
 
   display: grid;
-  grid-template-columns: 5fr 3fr 1fr;
+  grid-template-columns:  5fr 1fr;
+  height: 60vmin;
+}
+.console {
+  /*border: 0.5vmin solid green;*/
+
+  display: grid;
+  grid-template-columns:  auto auto 1fr 1fr;
   height: 60vmin;
 }
 .chat-area:first-child {

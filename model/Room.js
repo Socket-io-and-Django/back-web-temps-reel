@@ -16,6 +16,10 @@ const chatRoomSchema = new Schema({
     status: {
         type: Boolean,
         default: true
+    },
+    roomPublic: {
+        type: Boolean,
+        default: true
     }
 });
 module.exports = mongoose.model('Room', chatRoomSchema);

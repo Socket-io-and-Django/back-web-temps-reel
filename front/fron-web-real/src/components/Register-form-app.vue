@@ -61,7 +61,6 @@ function onSubmit() {
 }
 
 .form-control input {
-  width: 60%;
   height: 40px;
   margin: 5px;
   padding: 3px 7px;
