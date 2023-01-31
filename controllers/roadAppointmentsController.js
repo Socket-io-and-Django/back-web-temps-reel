@@ -22,7 +22,7 @@ const getAllRoadAppointments = async () => {
 const getNextRoadAppointmentId = async () => {
   const allAppointments = await RoadAppointment.find();
   if (allAppointments.length === 0) return 0;
-  return allAppointments[allAppointments.length - 1].revisionId + 1;
+  return allAppointments[allAppointments.length - 1].roadId + 1;
 };
 
 module.exports = {

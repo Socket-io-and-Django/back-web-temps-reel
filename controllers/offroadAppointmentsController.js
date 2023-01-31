@@ -22,7 +22,7 @@ const getAllOffroadAppointments = async () => {
 const getNextOffroadAppointmentId = async () => {
   const allAppointments = await OffroadAppointment.find();
   if (allAppointments.length === 0) return 0;
-  return allAppointments[allAppointments.length - 1].revisionId + 1;
+  return allAppointments[allAppointments.length - 1].offroadId + 1;
 };
 
 module.exports = {

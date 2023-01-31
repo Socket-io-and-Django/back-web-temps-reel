@@ -22,7 +22,7 @@ const getAllSportAppointments = async () => {
 const getNextSportAppointmentId = async () => {
   const allAppointments = await SportAppointment.find();
   if (allAppointments.length === 0) return 0;
-  return allAppointments[allAppointments.length - 1].revisionId + 1;
+  return allAppointments[allAppointments.length - 1].sportId + 1;
 };
 
 module.exports = {
