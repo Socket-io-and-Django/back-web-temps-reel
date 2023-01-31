@@ -1,31 +1,30 @@
-const express = require('express');
+const express = require("express");
 const app = express();
-const http = require('http');
+const http = require("http");
 const server = http.createServer(app);
-const { Server } = require('socket.io');
-const cors = require('cors');
-
+const { Server } = require("socket.io");
+const cors = require("cors");
 
 // const coolieParser = require('cookie-parser');
 const path = require('path');
 
 // middlewares
-const jwtSocketHandler = require('./middleware/jwtSocketHandler');
-const jwtRouterHandler = require('./middleware/jwtRoutersHandler');
-const credential = require('./middleware/credentials');
-const corsOptions = require('./config/corsOptions');
-const rolesList = require('./config/rolesList');
-const verifyRoles = require('./middleware/verifyRoles');
+const jwtSocketHandler = require("./middleware/jwtSocketHandler");
+const jwtRouterHandler = require("./middleware/jwtRoutersHandler");
+const credential = require("./middleware/credentials");
+const corsOptions = require("./config/corsOptions");
+const rolesList = require("./config/rolesList");
+const verifyRoles = require("./middleware/verifyRoles");
 
 // routes
-const auth = require('./routers/auth');
-const refresh = require('./routers/refresh');
-const register = require('./routers/register');
-const logout = require('./routers/logout');
-const allUsers = require('./routers/users');
+const auth = require("./routers/auth");
+const refresh = require("./routers/refresh");
+const register = require("./routers/register");
+const logout = require("./routers/logout");
+const allUsers = require("./routers/users");
 
 // Data Base
-const mongodb = require('./db/mongo');
+const mongodb = require("./db/mongo");
 
 // utils
 const {
@@ -37,14 +36,44 @@ const {
   getOnlineUsers,
   addToWaitingList,
   getWaitingList,
-  leaveWaitingList, isConsultant, consultantNotAvailable
-} = require('./utils/users');
-const formatMessage = require('./utils/messages');
+  leaveWaitingList,
+  isConsultant,
+} = require("./utils/users");
+const formatMessage = require("./utils/messages");
+const {
+  saveNewMaintenanceAppointment,
+  getAllMaintenanceAppointments,
+  getNextMaintenanceAppointmentId,
+} = require("./controllers/maintenanceAppointmentsController");
+
+const {
+  saveNewRevisionAppointment,
+  getAllRevisionAppointments,
+  getNextRevisionAppointmentId,
+} = require("./controllers/revisionAppointmentsController");
+
+const {
+  saveNewRoadAppointment,
+  getAllRoadAppointments,
+  getNextRoadAppointmentId,
+} = require("./controllers/roadAppointmentsController");
+
+const {
+  saveNewOffroadAppointment,
+  getAllOffroadAppointments,
+  getNextOffroadAppointmentId,
+} = require("./controllers/offroadAppointmentsController");
+
+const {
+  saveNewSportAppointment,
+  getAllSportAppointments,
+  getNextSportAppointmentId,
+} = require("./controllers/sportAppointmentsController");
 
 // Constants
-const BotName = 'Chat Bot';
+const BotName = "Chat Bot";
 const PORT = process.env.PORT || 9000;
-const PublicRoom = "Public Room"
+const PublicRoom = "Public Room";
 app.use(express.json());
 app.use(credential);
 
@@ -55,15 +84,14 @@ app.use(cors(corsOptions));
 
 // app.use(coolieParser);
 
-
-app.use('/register', register);
-app.use('/auth', auth);
-app.use('/refresh', refresh);
+app.use("/register", register);
+app.use("/auth", auth);
+app.use("/refresh", refresh);
 // app.use(jwtRouterHandler);
-app.use('/users', allUsers);
+app.use("/users", allUsers);
 
 // app.use(verifyRoles(rolesList.User));
-app.use('/logout', logout);
+app.use("/logout", logout);
 
 server.listen(PORT, () => {
   console.log(`listening on *:${PORT}`);
@@ -71,15 +99,14 @@ server.listen(PORT, () => {
 // const io = new Server(9000, { allowRequest: cors(corsOptions)});
 
 const io = new Server(3000, {
-  cors:{
-    origin: 'http://localhost:8080'
-  }
+  cors: {
+    origin: "http://localhost:8080",
+  },
 });
 
 io.use(jwtSocketHandler);
 
 // aux function and fake data Chat Bot
-
 
 // let users = [];
 
@@ -89,87 +116,15 @@ const contact = {
   contactNumber: "0160293759",
 };
 
-let nextMaintenanceId = 4;
-const maintenanceAppointments = [
-  // {
-  //   id: 1,
-  //   date: new Date("December 13, 2022 15:00:00"),
-  // },
-  {
-    id: 2,
-    date: new Date("December 15, 2022 10:00:00"),
-  },
-  // {
-  //   id: 3,
-  //   date: new Date("December 16, 2022 13:00:00"),
-  // },
-];
+let maintenanceAppointments = [];
 
-let nextRevisionId = 3;
-const revisionAppointments = [
-  {
-    id: 1,
-    date: new Date("December 13, 2022 15:00:00"),
-  },
-  {
-    id: 2,
-    date: new Date("December 15, 2022 10:00:00"),
-  },
-  // {
-  //   id: 3,
-  //   date: new Date("December 16, 2022 13:00:00"),
-  // },
-];
+let revisionAppointments = [];
 
-let nextRoadAppointmentId = 4;
-const roadAppointments = [
-  // {
-  //   id: 1,
-  //   date: new Date("December 13, 2022 15:00:00"),
-  // },
-  {
-    id: 2,
-    date: new Date("December 28, 2022 10:00:00"),
-  },
-  {
-    id: 3,
-    date: new Date("December 29, 2022 13:00:00"),
-  },
-];
+let roadAppointments = [];
 
+let offroadAppointments = [];
 
-let nextOffroadAppointmentId = 4;
-const offroadAppointments = [
-  // {
-  //   id: 1,
-  //   date: new Date("December 13, 2022 15:00:00"),
-  // },
-  {
-    id: 2,
-    date: new Date("December 28, 2022 10:00:00"),
-  },
-  {
-    id: 3,
-    date: new Date("December 29, 2022 13:00:00"),
-  },
-];
-
-
-let nextSportAppointmentId = 4;
-const sportAppointments = [
-  // {
-  //   id: 1,
-  //   date: new Date("December 13, 2022 15:00:00"),
-  // },
-  {
-    id: 2,
-    date: new Date("December 28, 2022 10:00:00"),
-  },
-  {
-    id: 3,
-    date: new Date("December 29, 2022 13:00:00"),
-  },
-];
+let sportAppointments = [];
 // End Fake data
 
 const startChatBot = (socket) => {
@@ -192,9 +147,9 @@ function addDays(date, days) {
 function getNextMonday(date = new Date()) {
   const dateCopy = new Date(date.getTime());
   const nextMonday = new Date(
-      dateCopy.setDate(
-          dateCopy.getDate() + ((7 - dateCopy.getDay() + 1) % 7 || 7)
-      )
+    dateCopy.setDate(
+      dateCopy.getDate() + ((7 - dateCopy.getDay() + 1) % 7 || 7)
+    )
   );
 
   return nextMonday;
@@ -206,18 +161,23 @@ const sendMessage = (socket, emitType, value) => {
 
 //
 
-io.on('connection', (socket) => {
+io.on("connection", (socket) => {
   // console.log("on connection", socket.handshake.auth);
-  const user = userJoin(socket.id, socket.handshake.auth.username, socket.handshake.auth.roles, PublicRoom);
+  const user = userJoin(
+    socket.id,
+    socket.handshake.auth.username,
+    socket.handshake.auth.roles,
+    PublicRoom
+  );
   socket.join(user.room);
-  if(user.isAvailable){
-    io.emit('availableConsultants', getConsultants());
+  if (user.isAvailable) {
+    io.emit("availableConsultants", getConsultants());
   }
-  socket.emit( 'roles', user.roles);
+  socket.emit("roles", user.roles);
 
-  socket.emit( 'message', formatMessage(BotName,`Welcome ${user.username}`));
+  socket.emit("message", formatMessage(BotName, `Welcome ${user.username}`));
 
-  socket.emit('availableConsultants', getConsultants());
+  socket.emit("availableConsultants", getConsultants());
   // socket.join(user.room)
   socket.emit('waitingList',  getWaitingList(user.id));
 
@@ -225,22 +185,27 @@ io.on('connection', (socket) => {
     io.to(id).emit('message', formatMessage(user.username, 'askToChat'));
     addToWaitingList(id, user);
     io.to(id).emit("waitingList", getWaitingList(id));
-    const room = `${id}${user.id}`
+    const room = `${id}${user.id}`;
     socket.leave(user.room);
     user.room = room;
     socket.join(room);
   });
 
-  socket.on('acceptToChat', (id) => {
+  socket.on("acceptToChat", (id) => {
     leaveWaitingList(id, user);
-    const room = `${user.id}${id}`
+    const room = `${user.id}${id}`;
     socket.leave(user.room);
     user.room = room;
     user.isAvailable = false;
-    socket.emit("waitingList", getWaitingList(id))
-    io.emit('availableConsultants', getConsultants());
+    socket.emit("waitingList", getWaitingList(id));
+    io.emit("availableConsultants", getConsultants());
     socket.join(user.room);
-    socket.to(room).emit('message', formatMessage(BotName, `${user.username} has accept your request`));
+    socket
+      .to(room)
+      .emit(
+        "message",
+        formatMessage(BotName, `${user.username} has accept your request`)
+      );
   });
 
   socket.on('refuseToChat', (id) => {
@@ -255,18 +220,22 @@ io.on('connection', (socket) => {
 
   socket.on('leaveChat', () => {
     const id = user.room.replace(user.id, "");
-    if(isConsultant(user.roles)){
+    if (isConsultant(user.roles)) {
       user.isAvailable = true;
-      io.emit('availableConsultants', getConsultants());
-    }
-    else{
+      io.emit("availableConsultants", getConsultants());
+    } else {
       leaveWaitingList(user.id, getCurrentUser(id));
     }
-    socket.to(user.room).emit('message', formatMessage(BotName, `${user.username} has left the chat`));
+    socket
+      .to(user.room)
+      .emit(
+        "message",
+        formatMessage(BotName, `${user.username} has left the chat`)
+      );
     socket.leave(user.room);
     user.room = PublicRoom;
     socket.join(user.room);
-    io.to(id).emit("waitingList", getWaitingList(id))
+    io.to(id).emit("waitingList", getWaitingList(id));
   });
 
   // send users and room info
@@ -322,32 +291,33 @@ io.on('connection', (socket) => {
   socket.on('joinRoom', (room) => {
   });
 
-  // chat Bot
-  socket.on('chatBot', () => {
-    console.log("startChat ...")
+  socket.on("joinRoom", (room) => {});
 
+  // chat Bot
+  socket.on("chatBot", () => {
+    console.log("startChat ...");
 
     let vehiculeInfo = {};
     // appointments
     let availableMaintenanceDates = [];
     let availableRevisionDates = [];
-
-    // vehicule info
     let availableRoadDates = [];
     let availableOffroadDates = [];
     let availableSportDates = [];
 
-    const calcAvailableMaintenanceDates = () => {
-      let nextAvailableMaintenanceId = 1;
-      let today = new Date("2022-12-23");
+    const calcAvailableMaintenanceDates = async () => {
+      maintenanceAppointments = await getAllMaintenanceAppointments();
+      let nextAvailableMaintenanceId = await getNextMaintenanceAppointmentId();
+      let today = new Date();
       // let today = new Date();
       let currentDay = today.getDay();
       availableMaintenanceDates = [];
       for (let day = today.getDay(); day < 6; day++) {
         if (
-            !maintenanceAppointments.some(
-                (e) => e.date.getDate() === addDays(today, day - currentDay).getDate()
-            )
+          !maintenanceAppointments.some(
+            (e) =>
+              e.date.getDate() === addDays(today, day - currentDay).getDate()
+          )
         ) {
           if (day > 0 && day < 6) {
             availableMaintenanceDates.push({
@@ -364,10 +334,10 @@ io.on('connection', (socket) => {
         availableMaintenanceDates = [];
         for (let day = today.getDay(); day < 6; day++) {
           if (
-              !maintenanceAppointments.some(
-                  (e) =>
-                      e.date.getDate() === addDays(today, day - currentDay).getDate()
-              )
+            !maintenanceAppointments.some(
+              (e) =>
+                e.date.getDate() === addDays(today, day - currentDay).getDate()
+            )
           ) {
             if (day > 0 && day < 6) {
               availableMaintenanceDates.push({
@@ -381,17 +351,18 @@ io.on('connection', (socket) => {
       }
     };
 
-    const calcAvailableRevisionDates = () => {
-      let nextAvailableRevisionId = 1;
-      let today = new Date("2022-12-23");
-      // let today = new Date();
+    const calcAvailableRevisionDates = async () => {
+      revisionAppointments = await getAllRevisionAppointments();
+      let nextAvailableRevisionId = await getNextRevisionAppointmentId();
+      let today = new Date();
       let currentDay = today.getDay();
       availableRevisionDates = [];
       for (let day = today.getDay(); day < 6; day++) {
         if (
-            !revisionAppointments.some(
-                (e) => e.date.getDate() === addDays(today, day - currentDay).getDate()
-            )
+          !revisionAppointments.some(
+            (e) =>
+              e.date.getDate() === addDays(today, day - currentDay).getDate()
+          )
         ) {
           if (day > 0 && day < 6) {
             availableRevisionDates.push({
@@ -408,10 +379,10 @@ io.on('connection', (socket) => {
         availableRevisionDates = [];
         for (let day = today.getDay(); day < 6; day++) {
           if (
-              !revisionAppointments.some(
-                  (e) =>
-                      e.date.getDate() === addDays(today, day - currentDay).getDate()
-              )
+            !revisionAppointments.some(
+              (e) =>
+                e.date.getDate() === addDays(today, day - currentDay).getDate()
+            )
           ) {
             if (day > 0 && day < 6) {
               availableRevisionDates.push({
@@ -425,17 +396,18 @@ io.on('connection', (socket) => {
       }
     };
 
-    const calcAvailableRoadDates = () => {
-      let nextAvailableRoadId = 1;
-      let today = new Date("2022-12-23");
-      // let today = new Date();
+    const calcAvailableRoadDates = async () => {
+      roadAppointments = await getAllRoadAppointments();
+      let nextAvailableRoadId = await getNextRoadAppointmentId();
+      let today = new Date();
       let currentDay = today.getDay();
       availableRoadDates = [];
       for (let day = today.getDay(); day < 6; day++) {
         if (
-            !roadAppointments.some(
-                (e) => e.date.getDate() === addDays(today, day - currentDay).getDate()
-            )
+          !roadAppointments.some(
+            (e) =>
+              e.date.getDate() === addDays(today, day - currentDay).getDate()
+          )
         ) {
           if (day > 0 && day < 6) {
             availableRoadDates.push({
@@ -452,10 +424,10 @@ io.on('connection', (socket) => {
         availableRoadDates = [];
         for (let day = today.getDay(); day < 6; day++) {
           if (
-              !roadAppointments.some(
-                  (e) =>
-                      e.date.getDate() === addDays(today, day - currentDay).getDate()
-              )
+            !roadAppointments.some(
+              (e) =>
+                e.date.getDate() === addDays(today, day - currentDay).getDate()
+            )
           ) {
             if (day > 0 && day < 6) {
               availableRoadDates.push({
@@ -469,17 +441,18 @@ io.on('connection', (socket) => {
       }
     };
 
-    const calcAvailableOffroadDates = () => {
-      let nextAvailableOffroadId = 1;
-      let today = new Date("2022-12-23");
-      // let today = new Date();
+    const calcAvailableOffroadDates = async () => {
+      offroadAppointments = await getAllOffroadAppointments();
+      let nextAvailableOffroadId = await getNextOffroadAppointmentId()
+      let today = new Date();
       let currentDay = today.getDay();
       availableOffroadDates = [];
       for (let day = today.getDay(); day < 6; day++) {
         if (
-            !offroadAppointments.some(
-                (e) => e.date.getDate() === addDays(today, day - currentDay).getDate()
-            )
+          !offroadAppointments.some(
+            (e) =>
+              e.date.getDate() === addDays(today, day - currentDay).getDate()
+          )
         ) {
           if (day > 0 && day < 6) {
             availableOffroadDates.push({
@@ -496,10 +469,10 @@ io.on('connection', (socket) => {
         availableOffroadDates = [];
         for (let day = today.getDay(); day < 6; day++) {
           if (
-              !offroadAppointments.some(
-                  (e) =>
-                      e.date.getDate() === addDays(today, day - currentDay).getDate()
-              )
+            !offroadAppointments.some(
+              (e) =>
+                e.date.getDate() === addDays(today, day - currentDay).getDate()
+            )
           ) {
             if (day > 0 && day < 6) {
               availableOffroadDates.push({
@@ -513,17 +486,18 @@ io.on('connection', (socket) => {
       }
     };
 
-    const calcAvailableSportDates = () => {
-      let nextAvailableSportId = 1;
-      let today = new Date("2022-12-23");
-      // let today = new Date();
+    const calcAvailableSportDates = async () => {
+      sportAppointments = await getAllSportAppointments()
+      let nextAvailableSportId = await getNextSportAppointmentId()
+      let today = new Date();
       let currentDay = today.getDay();
       availableSportDates = [];
       for (let day = today.getDay(); day < 6; day++) {
         if (
-            !sportAppointments.some(
-                (e) => e.date.getDate() === addDays(today, day - currentDay).getDate()
-            )
+          !sportAppointments.some(
+            (e) =>
+              e.date.getDate() === addDays(today, day - currentDay).getDate()
+          )
         ) {
           if (day > 0 && day < 6) {
             availableSportDates.push({
@@ -540,10 +514,10 @@ io.on('connection', (socket) => {
         availableSportDates = [];
         for (let day = today.getDay(); day < 6; day++) {
           if (
-              !sportAppointments.some(
-                  (e) =>
-                      e.date.getDate() === addDays(today, day - currentDay).getDate()
-              )
+            !sportAppointments.some(
+              (e) =>
+                e.date.getDate() === addDays(today, day - currentDay).getDate()
+            )
           ) {
             if (day > 0 && day < 6) {
               availableSportDates.push({
@@ -604,17 +578,17 @@ io.on('connection', (socket) => {
       });
     });
 
-    socket.on("send_last_maintenance_date", (res) => {
+    socket.on("send_last_maintenance_date", async (res) => {
       vehiculeInfo = {
         ...vehiculeInfo,
         lastMaintenanceDate: res,
       };
       let yearDiff = Math.abs(
-          new Date(vehiculeInfo.lastMaintenanceDate).getFullYear() -
+        new Date(vehiculeInfo.lastMaintenanceDate).getFullYear() -
           new Date().getFullYear()
       );
       if (yearDiff > 1) {
-        calcAvailableMaintenanceDates();
+        await calcAvailableMaintenanceDates();
         sendMessage(socket, "ask_appointment_date", {
           from: "server",
           txt: availableMaintenanceDates,
@@ -629,13 +603,12 @@ io.on('connection', (socket) => {
       }
     });
 
-    socket.on("send_maintenance_appointment_date", (res) => {
+    socket.on("send_maintenance_appointment_date", async (res) => {
       if (availableMaintenanceDates.some((e) => e.id === res)) {
-        maintenanceAppointments.push({
-          id: nextMaintenanceId,
-          date: availableMaintenanceDates.find((e) => e.id === res).date,
-        });
-        nextMaintenanceId += 1;
+        await saveNewMaintenanceAppointment(
+          await getNextMaintenanceAppointmentId(),
+          availableMaintenanceDates.find((e) => e.id === res).date
+        );
         socket.emit("maintenance_appointment_added", {
           from: "server",
           txt: "Votre rendez-vous a été sauvegardé !",
@@ -644,13 +617,13 @@ io.on('connection', (socket) => {
       }
     });
 
-    socket.on("send_km_since_maintenance_date", (res) => {
+    socket.on("send_km_since_maintenance_date", async (res) => {
       vehiculeInfo = {
         ...vehiculeInfo,
         kmSinceLastMaintenance: res,
       };
       if (vehiculeInfo.kmSinceLastMaintenance >= 10000) {
-        calcAvailableMaintenanceDates();
+        await calcAvailableMaintenanceDates();
         sendMessage(socket, "ask_appointment_date", {
           from: "server",
           txt: availableMaintenanceDates,
@@ -668,10 +641,10 @@ io.on('connection', (socket) => {
       }
     });
 
-    socket.on("send_do_revision", (res) => {
+    socket.on("send_do_revision", async (res) => {
       if (res === 1) {
         // TODO demande rdv
-        calcAvailableRevisionDates();
+        await calcAvailableRevisionDates();
         sendMessage(socket, "ask_revision_date", {
           from: "server",
           txt: availableRevisionDates,
@@ -681,13 +654,12 @@ io.on('connection', (socket) => {
       }
     });
 
-    socket.on("send_revision_date", (res) => {
+    socket.on("send_revision_date", async (res) => {
       if (availableRevisionDates.some((e) => e.id === res)) {
-        revisionAppointments.push({
-          id: nextRevisionId,
-          date: availableRevisionDates.find((e) => e.id === res).date,
-        });
-        nextRevisionId += 1;
+        await saveNewRevisionAppointment(
+          await getNextRevisionAppointmentId(),
+          availableRevisionDates.find((e) => e.id === res).date
+        );
         socket.emit("revision_appointment_added", {
           from: "server",
           txt: "Votre rendez-vous a été sauvegardé !",
@@ -696,21 +668,21 @@ io.on('connection', (socket) => {
       }
     });
 
-    socket.on("send_usage_type", (res) => {
+    socket.on("send_usage_type", async (res) => {
       if (res === 1) {
-        calcAvailableRoadDates();
+        await calcAvailableRoadDates();
         sendMessage(socket, "ask_road_appointment_date", {
           from: "server",
           txt: availableRoadDates,
         });
       } else if (res === 2) {
-        calcAvailableOffroadDates();
+        await calcAvailableOffroadDates();
         sendMessage(socket, "ask_offroad_appointment_date", {
           from: "server",
           txt: availableOffroadDates,
         });
       } else {
-        calcAvailableSportDates();
+        await calcAvailableSportDates();
         sendMessage(socket, "ask_sport_appointment_date", {
           from: "server",
           txt: availableSportDates,
@@ -718,13 +690,12 @@ io.on('connection', (socket) => {
       }
     });
 
-    socket.on("send_road_appointment_date", (res) => {
+    socket.on("send_road_appointment_date", async (res) => {
       if (availableRoadDates.some((e) => e.id === res)) {
-        roadAppointments.push({
-          id: nextRoadAppointmentId,
-          date: availableRoadDates.find((e) => e.id === res).date,
-        });
-        nextRoadAppointmentId += 1;
+        await saveNewRoadAppointment(
+          await getNextRoadAppointmentId(),
+          availableRoadDates.find((e) => e.id === res).date,
+        );
         socket.emit("road_appointment_added", {
           from: "server",
           txt: "Votre rendez-vous a été sauvegardé !",
@@ -733,14 +704,12 @@ io.on('connection', (socket) => {
       }
     });
 
-    socket.on("send_offroad_appointment_date", (res) => {
-      console.log(res)
+    socket.on("send_offroad_appointment_date", async (res) => {
       if (availableOffroadDates.some((e) => e.id === res)) {
-        offroadAppointments.push({
-          id: nextOffroadAppointmentId,
-          date: availableOffroadDates.find((e) => e.id === res).date,
-        });
-        nextOffroadAppointmentId += 1;
+        await saveNewOffroadAppointment(
+          await getNextOffroadAppointmentId(),
+          availableOffroadDates.find((e) => e.id === res).date,
+        );
         socket.emit("offroad_appointment_added", {
           from: "server",
           txt: "Votre rendez-vous a été sauvegardé !",
@@ -749,13 +718,12 @@ io.on('connection', (socket) => {
       }
     });
 
-    socket.on("send_sport_appointment_date", (res) => {
+    socket.on("send_sport_appointment_date", async (res) => {
       if (availableSportDates.some((e) => e.id === res)) {
-        sportAppointments.push({
-          id: nextSportAppointmentId,
-          date: availableSportDates.find((e) => e.id === res).date,
-        });
-        nextSportAppointmentId += 1;
+        await saveNewSportAppointment(
+          await getNextSportAppointmentId(),
+          availableSportDates.find((e) => e.id === res).date,
+        );
         socket.emit("sport_appointment_added", {
           from: "server",
           txt: "Votre rendez-vous a été sauvegardé !",
@@ -780,7 +748,6 @@ io.on('connection', (socket) => {
   });
 
   // end chat Bot
-
 });
 
 // ioChatbot.on('connection', (socket) => {})
@@ -795,10 +762,8 @@ io.on('connection', (socket) => {
 //   cookie: true
 // });
 
-
 // app.use(express.json());
 // app.use(coolieParser);
-
 
 // set static folder
 //
@@ -816,6 +781,3 @@ io.on('connection', (socket) => {
 //   console.log("Anonymous client connected");
 //
 // });
-
-
-

@@ -12,8 +12,8 @@ services:
 #    command: node
 
     ports:
-      - "3000:3000"
-      - "9000:9000"
+      - 3000:3000
+      - 9000:9000
     volumes:
       - .:/home/node
 

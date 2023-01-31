@@ -39,10 +39,6 @@ let availableSportDates = []
 const serverTextColor = 'blue'
 const chatContainer = ref(null)
 
-// function startChat() {
-//   socket.emit('chatBot');
-//   // startChatBot.value = true;
-// }
 const emitToServer = (emitType, value) => {
     console.log('emit_type', emitType);
     socket.emit(emitType, value)
